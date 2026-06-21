@@ -1,0 +1,90 @@
+/* ── Calendar Today Plugin ── */
+
+.ct-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  font-family: "Jost", sans-serif;
+  overflow: hidden;
+}
+
+/* Header: day name + long date */
+.ct-header {
+  flex: 0 0 auto;
+  padding-bottom: 1dvh;
+}
+
+.ct-day-name {
+  font-size: min(10dvw, 14dvh);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.ct-long-date {
+  font-size: min(4.5dvw, 6dvh);
+  font-weight: 400;
+  margin-top: 0.3em;
+  opacity: 0.75;
+}
+
+/* Horizontal divider */
+.ct-divider {
+  flex: 0 0 auto;
+  height: 0.3dvh;
+  background: currentColor;
+  opacity: 0.4;
+  margin: 1dvh 0;
+}
+
+/* Events list */
+.ct-events {
+  flex: 1 1 auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5dvh;
+}
+
+.ct-no-events {
+  font-size: min(4dvw, 5.5dvh);
+  opacity: 0.55;
+  margin-top: 2dvh;
+}
+
+/* Individual event card */
+.ct-event {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2dvh;
+  border-left: 0.5dvw solid currentColor;
+  padding-left: 1.5dvw;
+}
+
+.ct-event-title {
+  font-size: min(5dvw, 7dvh);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.ct-event-time {
+  font-size: min(3.5dvw, 5dvh);
+  opacity: 0.7;
+  font-weight: 400;
+}
+
+/* Notes lines */
+.ct-event-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1dvh;
+  margin-top: 0.2dvh;
+}
+
+.ct-note-line {
+  font-size: min(2.8dvw, 4dvh);
+  opacity: 0.6;
+  line-height: 1.3;
+  display: block;
+}
