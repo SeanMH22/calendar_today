@@ -4,7 +4,7 @@ Custom plugins for [InkyPi](https://github.com/fatihak/InkyPi) — an e-ink disp
 
 ## Plugins
 
-### `calendar_today` — Today's Calendar
+### `whats_on_today` — What's On Today
 
 Displays today's schedule at a glance in **landscape orientation**:
 
@@ -17,13 +17,13 @@ Displays today's schedule at a glance in **landscape orientation**:
 
 #### Installation
 
-Copy the `src/plugins/calendar_today` directory into the `src/plugins/` folder of your InkyPi installation, then add the following entry to your InkyPi plugin configuration:
+Copy the `src/plugins/whats_on_today` directory into the `src/plugins/` folder of your InkyPi installation, then add the following entry to your InkyPi plugin configuration:
 
 ```json
 {
-    "display_name": "Today's Calendar",
-    "id": "calendar_today",
-    "class": "CalendarToday"
+    "display_name": "What's On Today",
+    "id": "whats_on_today",
+    "class": "WhatsOnToday"
 }
 ```
 

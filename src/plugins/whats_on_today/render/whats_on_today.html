@@ -1,20 +1,20 @@
 {% extends "plugin.html" %}
 
 {% block content %}
-<div class="ct-wrapper">
-    <header class="ct-header">
-        <h1 class="ct-day-name">{{ day_name }}</h1>
-        <p class="ct-long-date">{{ long_date }}</p>
+<div class="wot-wrapper">
+    <header class="wot-header">
+        <h1 class="wot-day-name">{{ day_name }}</h1>
+        <p class="wot-long-date">{{ long_date }}</p>
     </header>
 
-    <div class="ct-divider"></div>
+    <div class="wot-divider"></div>
 
-    <main class="ct-events">
+    <main class="wot-events">
         {% if events %}
             {% for event in events %}
-            <div class="ct-event">
-                <div class="ct-event-title">{{ event.summary }}</div>
-                <div class="ct-event-time">
+            <div class="wot-event">
+                <div class="wot-event-title">{{ event.summary }}</div>
+                <div class="wot-event-time">
                     {% if event.start == "All day" %}
                         All day
                     {% elif event.end %}
@@ -24,16 +24,16 @@
                     {% endif %}
                 </div>
                 {% if event.notes %}
-                <div class="ct-event-notes">
+                <div class="wot-event-notes">
                     {% for line in event.notes %}
-                    <span class="ct-note-line">{{ line }}</span>
+                    <span class="wot-note-line">{{ line }}</span>
                     {% endfor %}
                 </div>
                 {% endif %}
             </div>
             {% endfor %}
         {% else %}
-            <p class="ct-no-events">No events today.</p>
+            <p class="wot-no-events">No events today.</p>
         {% endif %}
     </main>
 </div>
