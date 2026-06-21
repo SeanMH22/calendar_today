@@ -1,0 +1,19 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <!-- Simple line-drawn sunhat icon -->
+  
+  <!-- Hat brim (wide oval) -->
+  <ellipse cx="128" cy="160" rx="100" ry="20" 
+           fill="none" stroke="black" stroke-width="6" stroke-linecap="round"/>
+  
+  <!-- Hat crown (dome shape) -->
+  <path d="M 80 160 Q 80 80, 128 70 Q 176 80, 176 160" 
+        fill="none" stroke="black" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Hat band/ribbon -->
+  <ellipse cx="128" cy="155" rx="48" ry="8" 
+           fill="none" stroke="black" stroke-width="5" stroke-linecap="round"/>
+  
+  <!-- Optional: Small bow on the side -->
+  <path d="M 175 152 L 185 148 L 180 155 L 185 162 L 175 158" 
+        fill="none" stroke="black" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

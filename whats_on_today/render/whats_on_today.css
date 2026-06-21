@@ -109,7 +109,7 @@
 
 /* ── Spectra 6 High Contrast Color Backgrounds ── */
 
-/* Red - IMMINENT: Events starting within 15 minutes */
+/* Red - IMMINENT: Events currently in progress (happening now) */
 .wot-event-imminent {
   background-color: #FF0000;
   color: #FFFFFF;
@@ -127,7 +127,7 @@
   opacity: 1;
 }
 
-/* Orange - SOON: Events starting within 30 minutes */
+/* Orange - SOON: Events starting within 15 minutes */
 .wot-event-soon {
   background-color: #FF8000;
   color: #000000;

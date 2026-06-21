@@ -36,12 +36,10 @@ class WhatsOnToday(BasePlugin):
 
         day_name = now.strftime("%A")
         long_date = now.strftime("%-d %B %Y")
-        current_time = self._format_time(now, time_format)
 
         template_params = {
             "day_name": day_name,
             "long_date": long_date,
-            "current_time": current_time,
             "events": events,
             "time_format": time_format,
             "plugin_settings": settings,
@@ -86,6 +84,9 @@ class WhatsOnToday(BasePlugin):
 
                 # Determine urgency based on time until event
                 urgency = self._calculate_urgency(dtstart, now, tz)
+                
+                # Check if event is currently in progress
+                is_in_progress = self._is_event_in_progress(dtstart, dtend, now, tz)
 
                 if dtstart and isinstance(dtstart, datetime):
                     start_str = self._format_time(dtstart.astimezone(tz), time_format)
@@ -105,30 +106,58 @@ class WhatsOnToday(BasePlugin):
                     "end": end_str,
                     "notes": note_lines,
                     "urgency": urgency,
+                    "is_in_progress": is_in_progress,
+                    "dtstart": dtstart,
                 })
             except Exception as exc:
                 logger.warning(f"Skipping malformed event: {exc}")
                 continue
 
-        # Sort chronologically: all-day events first, then by start time
-        events.sort(key=lambda e: (e["start"] != "All day", e["start"]))
-        return events
+        # Sort: in-progress events first, then by start time
+        # In-progress events get priority (is_in_progress=False sorts after True)
+        events.sort(key=lambda e: (
+            not e["is_in_progress"],  # In-progress events first
+            e["start"] == "All day",   # Then all-day events
+            e["dtstart"] if e["dtstart"] and isinstance(e["dtstart"], datetime) else datetime.max.replace(tzinfo=tz)
+        ))
+        
+        # Remove the dtstart field (only needed for sorting)
+        for event in events:
+            event.pop("dtstart", None)
+        
+        # Limit to next 3 events
+        return events[:3]
 
+    def _is_event_in_progress(self, dtstart, dtend, now, tz):
+        """Check if event is currently in progress."""
+        if not dtstart or not isinstance(dtstart, datetime):
+            return False  # All-day events are not considered "in progress"
+        
+        start_dt = dtstart.astimezone(tz)
+        
+        # If no end time, check if start time has passed
+        if not dtend or not isinstance(dtend, datetime):
+            return start_dt <= now
+        
+        end_dt = dtend.astimezone(tz)
+        return start_dt <= now < end_dt
+    
     def _calculate_urgency(self, dtstart, now, tz):
         """Calculate urgency level based on time until event.
-        Returns: 'imminent' (red), 'soon' (orange), 'allday' (blue), or 'normal' (black)
+        Returns: 'in_progress' (red), 'imminent' (orange), 'soon' (yellow), 'allday' (blue), or 'normal' (yellow)
         """
         if not dtstart or not isinstance(dtstart, datetime):
             return "allday"  # All-day events in blue
         
         time_until_minutes = (dtstart.astimezone(tz) - now).total_seconds() / 60
         
-        if 0 <= time_until_minutes <= 15:
-            return "imminent"  # Red - starts within 15 minutes
-        elif 15 < time_until_minutes <= 30:
-            return "soon"  # Orange - starts within 30 minutes
+        # Event has already started (negative time means it's in the past/ongoing)
+        if time_until_minutes < 0:
+            return "imminent"  # Red for in-progress events
+        elif 0 <= time_until_minutes <= 15:
+            return "soon"  # Orange - starts within 15 minutes
         else:
-            return "normal"  # Black - regular event
+            return "normal"  # Yellow - regular upcoming event
 
     def _format_time(self, dt, time_format):
         """Format datetime according to time_format (12h or 24h)."""
