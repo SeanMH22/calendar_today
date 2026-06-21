@@ -32,14 +32,16 @@ class WhatsOnToday(BasePlugin):
         now = datetime.now(tz)
         today = now.date()
 
-        events = self.fetch_todays_events(calendar_url, tz, today, time_format)
+        events = self.fetch_todays_events(calendar_url, tz, today, time_format, now)
 
         day_name = now.strftime("%A")
         long_date = now.strftime("%-d %B %Y")
+        current_time = self._format_time(now, time_format)
 
         template_params = {
             "day_name": day_name,
             "long_date": long_date,
+            "current_time": current_time,
             "events": events,
             "time_format": time_format,
             "plugin_settings": settings,
@@ -52,8 +54,10 @@ class WhatsOnToday(BasePlugin):
             raise RuntimeError("Failed to render calendar image, please check logs.")
         return image
 
-    def fetch_todays_events(self, calendar_url, tz, today, time_format="12h"):
+    def fetch_todays_events(self, calendar_url, tz, today, time_format="12h", now=None):
         """Fetch and return events occurring on *today* from the given ICS URL."""
+        if now is None:
+            now = datetime.now(tz)
         # Support webcal:// scheme
         if calendar_url.startswith("webcal://"):
             calendar_url = calendar_url.replace("webcal://", "https://")
@@ -80,6 +84,9 @@ class WhatsOnToday(BasePlugin):
                 dtstart = event.decoded("dtstart") if "dtstart" in event else None
                 dtend = event.decoded("dtend") if "dtend" in event else None
 
+                # Determine urgency based on time until event
+                urgency = self._calculate_urgency(dtstart, now, tz)
+
                 if dtstart and isinstance(dtstart, datetime):
                     start_str = self._format_time(dtstart.astimezone(tz), time_format)
                 else:
@@ -97,6 +104,7 @@ class WhatsOnToday(BasePlugin):
                     "start": start_str,
                     "end": end_str,
                     "notes": note_lines,
+                    "urgency": urgency,
                 })
             except Exception as exc:
                 logger.warning(f"Skipping malformed event: {exc}")
@@ -105,6 +113,22 @@ class WhatsOnToday(BasePlugin):
         # Sort chronologically: all-day events first, then by start time
         events.sort(key=lambda e: (e["start"] != "All day", e["start"]))
         return events
+
+    def _calculate_urgency(self, dtstart, now, tz):
+        """Calculate urgency level based on time until event.
+        Returns: 'imminent' (red), 'soon' (orange), 'allday' (blue), or 'normal' (black)
+        """
+        if not dtstart or not isinstance(dtstart, datetime):
+            return "allday"  # All-day events in blue
+        
+        time_until_minutes = (dtstart.astimezone(tz) - now).total_seconds() / 60
+        
+        if 0 <= time_until_minutes <= 15:
+            return "imminent"  # Red - starts within 15 minutes
+        elif 15 < time_until_minutes <= 30:
+            return "soon"  # Orange - starts within 30 minutes
+        else:
+            return "normal"  # Black - regular event
 
     def _format_time(self, dt, time_format):
         """Format datetime according to time_format (12h or 24h)."""

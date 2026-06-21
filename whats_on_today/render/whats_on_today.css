@@ -24,9 +24,14 @@
 
 .wot-long-date {
   font-size: min(4.5dvw, 6dvh);
-  font-weight: 400;
+  font-weight: 600;
   margin-top: 0.3em;
   opacity: 0.75;
+}
+
+.wot-current-time {
+  font-weight: 700;
+  opacity: 1;
 }
 
 /* Horizontal divider */
@@ -88,3 +93,36 @@
   line-height: 1.3;
   display: block;
 }
+
+/* ── Spectra 6 Color Urgency ── */
+
+/* Red - Events starting within 15 minutes */
+.wot-event-imminent .wot-event-title {
+  color: #FF0000;
+  font-weight: 900;
+}
+
+.wot-event-imminent {
+  border-left-color: #FF0000;
+}
+
+/* Orange - Events starting within 30 minutes */
+.wot-event-soon .wot-event-title {
+  color: #FF8000;
+  font-weight: 800;
+}
+
+.wot-event-soon {
+  border-left-color: #FF8000;
+}
+
+/* Blue - All-day events */
+.wot-event-allday .wot-event-title {
+  color: #0000FF;
+}
+
+.wot-event-allday {
+  border-left-color: #0000FF;
+}
+
+/* Normal events (black) - default styling already applied */

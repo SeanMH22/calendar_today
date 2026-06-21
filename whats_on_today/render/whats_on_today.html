@@ -3,8 +3,8 @@
 {% block content %}
 <div class="wot-wrapper">
     <header class="wot-header">
-        <h1 class="wot-day-name">{{ day_name }}</h1>
-        <p class="wot-long-date">{{ long_date }}</p>
+        <h1 class="wot-day-name">Today is: {{ day_name }}</h1>
+        <h3 class="wot-long-date">{{ long_date }} <span class="wot-current-time">• {{ current_time }}</span></h3>
     </header>
 
     <div class="wot-divider"></div>
@@ -12,7 +12,7 @@
     <main class="wot-events">
         {% if events %}
             {% for event in events %}
-            <div class="wot-event">
+            <div class="wot-event wot-event-{{ event.urgency }}">
                 <div class="wot-event-title">{{ event.summary }}</div>
                 <div class="wot-event-time">
                     {% if event.start == "All day" %}
