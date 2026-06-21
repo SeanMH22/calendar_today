@@ -72,7 +72,7 @@
 .wot-event {
   display: flex;
   flex-direction: column;
-  gap: 1dvh;
+  gap: 0.3dvh;
   border-left: 2.5dvw solid #000000;
   padding: 2.5dvh 3dvw;
   margin: 0;
@@ -83,12 +83,17 @@
   font-size: min(9dvw, 7dvh);
   font-weight: 900;
   line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .wot-event-time {
   font-size: min(7dvw, 5.5dvh);
   opacity: 0.9;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 /* Notes lines */
@@ -105,6 +110,9 @@
   line-height: 1.4;
   display: block;
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ── Spectra 6 High Contrast Color Backgrounds ── */

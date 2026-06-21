@@ -82,11 +82,21 @@ class WhatsOnToday(BasePlugin):
                 dtstart = event.decoded("dtstart") if "dtstart" in event else None
                 dtend = event.decoded("dtend") if "dtend" in event else None
 
-                # Determine urgency based on time until event
-                urgency = self._calculate_urgency(dtstart, now, tz)
+                # Skip events that have finished
+                if self._is_event_finished(dtstart, dtend, now, tz):
+                    continue
                 
                 # Check if event is currently in progress
                 is_in_progress = self._is_event_in_progress(dtstart, dtend, now, tz)
+                
+                # Skip in-progress events that started more than 15 minutes ago
+                if is_in_progress and dtstart and isinstance(dtstart, datetime):
+                    minutes_since_start = (now - dtstart.astimezone(tz)).total_seconds() / 60
+                    if minutes_since_start > 15:
+                        continue
+                
+                # Determine urgency based on time until event
+                urgency = self._calculate_urgency(dtstart, now, tz)
 
                 if dtstart and isinstance(dtstart, datetime):
                     start_str = self._format_time(dtstart.astimezone(tz), time_format)
@@ -113,11 +123,9 @@ class WhatsOnToday(BasePlugin):
                 logger.warning(f"Skipping malformed event: {exc}")
                 continue
 
-        # Sort: in-progress events first, then by start time
-        # In-progress events get priority (is_in_progress=False sorts after True)
+        # Sort chronologically: all-day events last, then by start time (early to late)
         events.sort(key=lambda e: (
-            not e["is_in_progress"],  # In-progress events first
-            e["start"] == "All day",   # Then all-day events
+            e["start"] == "All day",   # All-day events last
             e["dtstart"] if e["dtstart"] and isinstance(e["dtstart"], datetime) else datetime.max.replace(tzinfo=tz)
         ))
         
@@ -128,6 +136,19 @@ class WhatsOnToday(BasePlugin):
         # Limit to next 3 events
         return events[:3]
 
+    def _is_event_finished(self, dtstart, dtend, now, tz):
+        """Check if event has finished."""
+        if not dtstart or not isinstance(dtstart, datetime):
+            return False  # All-day events are not considered "finished"
+        
+        # If there's an end time, check if it has passed
+        if dtend and isinstance(dtend, datetime):
+            end_dt = dtend.astimezone(tz)
+            return end_dt <= now
+        
+        # No end time - not considered finished
+        return False
+    
     def _is_event_in_progress(self, dtstart, dtend, now, tz):
         """Check if event is currently in progress."""
         if not dtstart or not isinstance(dtstart, datetime):
