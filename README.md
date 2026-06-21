@@ -17,7 +17,7 @@ Displays today's schedule at a glance in **landscape orientation**:
 
 #### Installation
 
-Copy the `src/plugins/whats_on_today` directory into the `src/plugins/` folder of your InkyPi installation, then add the following entry to your InkyPi plugin configuration:
+Copy the `whats_on_today` directory into the `src/plugins/` folder of your InkyPi installation, then add the following entry to your InkyPi plugin configuration:
 
 ```json
 {
