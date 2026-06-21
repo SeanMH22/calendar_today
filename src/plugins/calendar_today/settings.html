@@ -1,0 +1,20 @@
+<div class="form-group">
+    <label for="calendarURL" class="form-label">Calendar URL (iCal / .ics)</label>
+    <input
+        type="url"
+        id="calendarURL"
+        name="calendarURL"
+        placeholder="https://calendar.google.com/calendar/ical/…/basic.ics"
+        required
+        class="form-input"
+    >
+    <small class="form-hint">Paste your Google Calendar, Apple Calendar or any iCal feed URL here.</small>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        if (loadPluginSettings) {
+            document.getElementById('calendarURL').value = pluginSettings.calendarURL || '';
+        }
+    });
+</script>

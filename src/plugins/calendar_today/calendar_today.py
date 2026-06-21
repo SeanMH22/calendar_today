@@ -1,0 +1,110 @@
+import logging
+import requests
+import icalendar
+import recurring_ical_events
+import pytz
+from datetime import datetime, date, timedelta
+from plugins.base_plugin.base_plugin import BasePlugin
+
+logger = logging.getLogger(__name__)
+
+
+class CalendarToday(BasePlugin):
+    def generate_settings_template(self):
+        template_params = super().generate_settings_template()
+        template_params['style_settings'] = True
+        return template_params
+
+    def generate_image(self, settings, device_config):
+        calendar_url = settings.get("calendarURL", "").strip()
+        if not calendar_url:
+            raise RuntimeError("A calendar URL is required.")
+
+        # Always use landscape dimensions
+        dimensions = device_config.get_resolution()
+        if device_config.get_config("orientation") == "vertical":
+            # Swap to landscape
+            dimensions = dimensions[::-1]
+
+        timezone = device_config.get_config("timezone", default="America/New_York")
+        time_format = device_config.get_config("time_format", default="12h")
+        tz = pytz.timezone(timezone)
+        now = datetime.now(tz)
+        today = now.date()
+
+        events = self.fetch_todays_events(calendar_url, tz, today)
+
+        day_name = now.strftime("%A")
+        long_date = now.strftime("%-d %B %Y")
+
+        template_params = {
+            "day_name": day_name,
+            "long_date": long_date,
+            "events": events,
+            "time_format": time_format,
+            "plugin_settings": settings,
+        }
+
+        image = self.render_image(
+            dimensions, "calendar_today.html", "calendar_today.css", template_params
+        )
+        if not image:
+            raise RuntimeError("Failed to render calendar image, please check logs.")
+        return image
+
+    def fetch_todays_events(self, calendar_url, tz, today):
+        """Fetch and return events occurring on *today* from the given ICS URL."""
+        # Support webcal:// scheme
+        if calendar_url.startswith("webcal://"):
+            calendar_url = calendar_url.replace("webcal://", "https://")
+
+        try:
+            response = requests.get(calendar_url, timeout=30)
+            response.raise_for_status()
+            cal = icalendar.Calendar.from_ical(response.text)
+        except Exception as exc:
+            raise RuntimeError(f"Failed to fetch calendar: {exc}") from exc
+
+        start_of_day = datetime(today.year, today.month, today.day, 0, 0, 0)
+        end_of_day = start_of_day + timedelta(days=1)
+
+        raw_events = recurring_ical_events.of(cal).between(start_of_day, end_of_day)
+
+        events = []
+        for event in raw_events:
+            summary = str(event.get("summary", ""))
+            description = str(event.get("description", "") or "")
+            note_lines = self._first_lines(description, max_lines=2)
+
+            dtstart = event.decoded("dtstart")
+            dtend = event.decoded("dtend") if "dtend" in event else None
+
+            if isinstance(dtstart, datetime):
+                start_str = dtstart.astimezone(tz).strftime("%I:%M %p").lstrip("0")
+            else:
+                start_str = "All day"
+
+            if isinstance(dtend, datetime):
+                end_str = dtend.astimezone(tz).strftime("%I:%M %p").lstrip("0")
+            elif isinstance(dtend, date):
+                end_str = ""
+            else:
+                end_str = ""
+
+            events.append({
+                "summary": summary,
+                "start": start_str,
+                "end": end_str,
+                "notes": note_lines,
+            })
+
+        # Sort chronologically: all-day events first, then by start time
+        events.sort(key=lambda e: (e["start"] != "All day", e["start"]))
+        return events
+
+    def _first_lines(self, text, max_lines=2):
+        """Return up to *max_lines* non-empty lines from *text*."""
+        if not text:
+            return []
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        return lines[:max_lines]
