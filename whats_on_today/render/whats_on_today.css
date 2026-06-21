@@ -15,32 +15,41 @@
   padding-bottom: 1dvh;
 }
 
+.wot-header h3 {
+  font-size: min(6dvw, 4dvh);
+  font-weight: 900;
+  margin: 0;
+  opacity: 0.8;
+  letter-spacing: 0.05em;
+}
+
 .wot-day-name {
-  font-size: min(10dvw, 14dvh);
-  font-weight: 700;
+  font-size: min(22dvw, 16dvh);
+  font-weight: 900;
   line-height: 1;
   letter-spacing: -0.02em;
 }
 
 .wot-long-date {
-  font-size: min(4.5dvw, 6dvh);
-  font-weight: 600;
-  margin-top: 0.3em;
-  opacity: 0.75;
+  font-size: min(7dvw, 5dvh);
+  font-weight: 700;
+  margin-top: 0.5em;
+  opacity: 1;
 }
 
 .wot-current-time {
-  font-weight: 700;
+  font-weight: 900;
   opacity: 1;
+  font-size: 1.1em;
 }
 
 /* Horizontal divider */
 .wot-divider {
   flex: 0 0 auto;
-  height: 0.3dvh;
+  height: 0.8dvh;
   background: currentColor;
-  opacity: 0.4;
-  margin: 1dvh 0;
+  opacity: 0.8;
+  margin: 2dvh 0;
 }
 
 /* Events list */
@@ -49,80 +58,126 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 1.5dvh;
+  gap: 3dvh;
 }
 
 .wot-no-events {
-  font-size: min(4dvw, 5.5dvh);
-  opacity: 0.55;
-  margin-top: 2dvh;
+  font-size: min(8dvw, 6dvh);
+  font-weight: 700;
+  opacity: 0.7;
+  margin-top: 3dvh;
 }
 
 /* Individual event card */
 .wot-event {
   display: flex;
   flex-direction: column;
-  gap: 0.2dvh;
-  border-left: 0.5dvw solid currentColor;
-  padding-left: 1.5dvw;
+  gap: 1dvh;
+  border-left: 2.5dvw solid #000000;
+  padding: 2.5dvh 3dvw;
+  margin: 0;
+  border-radius: 1dvw;
 }
 
 .wot-event-title {
-  font-size: min(5dvw, 7dvh);
-  font-weight: 700;
-  line-height: 1.1;
+  font-size: min(9dvw, 7dvh);
+  font-weight: 900;
+  line-height: 1.2;
 }
 
 .wot-event-time {
-  font-size: min(3.5dvw, 5dvh);
-  opacity: 0.7;
-  font-weight: 400;
+  font-size: min(7dvw, 5.5dvh);
+  opacity: 0.9;
+  font-weight: 700;
 }
 
 /* Notes lines */
 .wot-event-notes {
   display: flex;
   flex-direction: column;
-  gap: 0.1dvh;
-  margin-top: 0.2dvh;
+  gap: 0.5dvh;
+  margin-top: 1dvh;
 }
 
 .wot-note-line {
-  font-size: min(2.8dvw, 4dvh);
-  opacity: 0.6;
-  line-height: 1.3;
+  font-size: min(5.5dvw, 4.5dvh);
+  opacity: 0.85;
+  line-height: 1.4;
   display: block;
+  font-weight: 600;
 }
 
-/* ── Spectra 6 Color Urgency ── */
+/* ── Spectra 6 High Contrast Color Backgrounds ── */
 
-/* Red - Events starting within 15 minutes */
+/* Red - IMMINENT: Events starting within 15 minutes */
+.wot-event-imminent {
+  background-color: #FF0000;
+  color: #FFFFFF;
+  border-left-color: #000000;
+}
+
 .wot-event-imminent .wot-event-title {
-  color: #FF0000;
+  color: #FFFFFF;
   font-weight: 900;
 }
 
-.wot-event-imminent {
-  border-left-color: #FF0000;
+.wot-event-imminent .wot-event-time,
+.wot-event-imminent .wot-note-line {
+  color: #FFFFFF;
+  opacity: 1;
 }
 
-/* Orange - Events starting within 30 minutes */
-.wot-event-soon .wot-event-title {
-  color: #FF8000;
-  font-weight: 800;
-}
-
+/* Orange - SOON: Events starting within 30 minutes */
 .wot-event-soon {
-  border-left-color: #FF8000;
+  background-color: #FF8000;
+  color: #000000;
+  border-left-color: #000000;
 }
 
-/* Blue - All-day events */
+.wot-event-soon .wot-event-title {
+  color: #000000;
+  font-weight: 900;
+}
+
+.wot-event-soon .wot-event-time,
+.wot-event-soon .wot-note-line {
+  color: #000000;
+  opacity: 1;
+}
+
+/* Blue - ALL DAY: All-day events */
+.wot-event-allday {
+  background-color: #FFFFFF;
+  color: #0000FF;
+  border-left-color: #0000FF;
+  border-left-width: 3dvw;
+}
+
 .wot-event-allday .wot-event-title {
   color: #0000FF;
+  font-weight: 900;
 }
 
-.wot-event-allday {
-  border-left-color: #0000FF;
+.wot-event-allday .wot-event-time,
+.wot-event-allday .wot-note-line {
+  color: #0000FF;
+  opacity: 1;
 }
 
-/* Normal events (black) - default styling already applied */
+/* Yellow - NORMAL: Regular upcoming events */
+.wot-event-normal {
+  background-color: #FFFF00;
+  color: #000000;
+  border-left-color: #000000;
+}
+
+.wot-event-normal .wot-event-title {
+  color: #000000;
+  font-weight: 900;
+}
+
+.wot-event-normal .wot-event-time,
+.wot-event-normal .wot-note-line {
+  color: #000000;
+  opacity: 1;
+}
