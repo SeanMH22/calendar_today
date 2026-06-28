@@ -197,6 +197,14 @@
   flex-direction: column;
   gap: 2dvh;
   padding: 3dvh 0;
+  align-items: center;
+  text-align: center;
+}
+
+.wot-weather-icon {
+  font-size: min(35dvw, 25dvh);
+  line-height: 1;
+  margin-bottom: 1dvh;
 }
 
 .wot-weather-location {
@@ -213,6 +221,24 @@
   letter-spacing: -0.02em;
 }
 
+.wot-weather-temp-range {
+  display: flex;
+  gap: 3dvw;
+  align-items: baseline;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.wot-temp-max {
+  font-size: min(28dvw, 20dvh);
+}
+
+.wot-temp-min {
+  font-size: min(18dvw, 13dvh);
+  opacity: 0.7;
+}
+
 .wot-weather-feels-like {
   font-size: min(7dvw, 5.5dvh);
   font-weight: 600;
@@ -226,6 +252,12 @@
   opacity: 0.9;
   text-transform: capitalize;
   margin-top: 1dvh;
+}
+
+.wot-weather-rain {
+  font-size: min(7dvw, 5.5dvh);
+  font-weight: 600;
+  opacity: 0.85;
 }
 
 .wot-weather-details {

@@ -207,12 +207,12 @@ class WhatsOnToday(BasePlugin):
             return []
 
     def fetch_bom_weather(self, bom_url):
-        """Fetch current weather from Australian Bureau of Meteorology.
+        """Fetch weather forecast from Australian Bureau of Meteorology.
         
         Args:
-            bom_url: Full URL to BOM observation JSON
-                    Example: 'https://www.bom.gov.au/fwo/IDN60801/IDN60801.95757.json'
-                    Find your URL at http://www.bom.gov.au/nsw/observations/map.shtml
+            bom_url: Full URL to BOM forecast or observation JSON
+                    Forecast example: 'https://www.bom.gov.au/fwo/IDN11060/IDN11060.94768.json'
+                    Observation fallback: 'https://www.bom.gov.au/fwo/IDN60801/IDN60801.95757.json'
             
         Returns:
             Dictionary with weather data or None if fetch fails
@@ -230,43 +230,17 @@ class WhatsOnToday(BasePlugin):
             response.raise_for_status()
             data = response.json()
             
-            # Extract observation data
-            observations = data.get("observations", {}).get("data", [])
-            if not observations:
-                logger.warning("No observation data found in BOM response")
-                return None
+            # Try to parse as forecast data first (preferred)
+            if "data" in data and isinstance(data["data"], list) and len(data["data"]) > 0:
+                return self._parse_forecast_data(data)
             
-            # Get the most recent observation
-            obs = observations[0]
+            # Fall back to observation data
+            elif "observations" in data:
+                return self._parse_observation_data(data)
             
-            # Extract relevant fields
-            temp = obs.get("air_temp")
-            apparent_temp = obs.get("apparent_t")
-            weather_desc = obs.get("weather", "")
-            humidity = obs.get("rel_hum")
-            wind_speed_kmh = obs.get("wind_spd_kmh")
-            wind_dir = obs.get("wind_dir", "")
-            
-            # Get location name from header
-            location = data.get("observations", {}).get("header", [{}])[0].get("name", "Unknown")
-            
-            # Clean up weather description - BOM uses "-" for "not reported"
-            if weather_desc and weather_desc != "-":
-                weather_desc = weather_desc.strip()
             else:
-                weather_desc = None
-            
-            logger.info(f"Successfully fetched weather for {location}: {temp}°C")
-            
-            return {
-                "temperature": temp,
-                "apparent_temp": apparent_temp,
-                "description": weather_desc,
-                "humidity": humidity,
-                "wind_speed": wind_speed_kmh,
-                "wind_direction": wind_dir,
-                "location": location,
-            }
+                logger.warning("Unknown BOM data format")
+                return None
             
         except requests.exceptions.HTTPError as exc:
             logger.error(f"BOM HTTP error: {exc}. Check that the URL is correct.")
@@ -277,3 +251,119 @@ class WhatsOnToday(BasePlugin):
         except (KeyError, ValueError, IndexError) as exc:
             logger.error(f"Failed to parse BOM weather data: {exc}")
             return None
+    
+    def _parse_forecast_data(self, data):
+        """Parse BOM forecast JSON format."""
+        try:
+            # Get today's forecast (first entry)
+            forecast_data = data["data"][0]
+            
+            # Extract forecast fields
+            min_temp = forecast_data.get("temp_min")
+            max_temp = forecast_data.get("temp_max")
+            short_text = forecast_data.get("short_text", "")
+            precis = forecast_data.get("precis", "")
+            icon_descriptor = forecast_data.get("icon_descriptor", "")
+            rain_chance = forecast_data.get("rain", {}).get("chance", None)
+            
+            # Use short_text or precis for description
+            description = short_text or precis or icon_descriptor
+            
+            # Get location from metadata
+            location = data.get("metadata", {}).get("name", "Unknown")
+            
+            # Map icon descriptor to weather icon
+            weather_icon = self._get_weather_icon(icon_descriptor or description)
+            
+            logger.info(f"Successfully fetched forecast for {location}: {max_temp}°C - {description}")
+            
+            return {
+                "type": "forecast",
+                "temperature": max_temp,  # Use max temp for forecast
+                "min_temp": min_temp,
+                "max_temp": max_temp,
+                "description": description if description else None,
+                "icon": weather_icon,
+                "rain_chance": rain_chance,
+                "location": location,
+            }
+        except Exception as exc:
+            logger.warning(f"Failed to parse forecast data: {exc}")
+            return None
+    
+    def _parse_observation_data(self, data):
+        """Parse BOM observation JSON format (fallback)."""
+        try:
+            observations = data.get("observations", {}).get("data", [])
+            if not observations:
+                return None
+            
+            obs = observations[0]
+            
+            # Extract observation fields
+            temp = obs.get("air_temp")
+            apparent_temp = obs.get("apparent_t")
+            weather_desc = obs.get("weather", "")
+            humidity = obs.get("rel_hum")
+            wind_speed_kmh = obs.get("wind_spd_kmh")
+            wind_dir = obs.get("wind_dir", "")
+            
+            location = data.get("observations", {}).get("header", [{}])[0].get("name", "Unknown")
+            
+            # Clean up weather description
+            if weather_desc and weather_desc != "-":
+                weather_desc = weather_desc.strip()
+            else:
+                weather_desc = None
+            
+            weather_icon = self._get_weather_icon(weather_desc) if weather_desc else None
+            
+            logger.info(f"Successfully fetched observation for {location}: {temp}°C")
+            
+            return {
+                "type": "observation",
+                "temperature": temp,
+                "apparent_temp": apparent_temp,
+                "description": weather_desc,
+                "icon": weather_icon,
+                "humidity": humidity,
+                "wind_speed": wind_speed_kmh,
+                "wind_direction": wind_dir,
+                "location": location,
+            }
+        except Exception as exc:
+            logger.warning(f"Failed to parse observation data: {exc}")
+            return None
+    
+    def _get_weather_icon(self, description):
+        """Map weather description to emoji icon."""
+        if not description:
+            return None
+        
+        desc_lower = description.lower()
+        
+        # BOM icon descriptors and common terms
+        if "sunny" in desc_lower or "clear" in desc_lower or "fine" in desc_lower:
+            return "☀️"
+        elif "rain" in desc_lower and "shower" in desc_lower:
+            return "🌦️"
+        elif "shower" in desc_lower:
+            return "🌧️"
+        elif "rain" in desc_lower:
+            return "🌧️"
+        elif "storm" in desc_lower or "thunder" in desc_lower:
+            return "⛈️"
+        elif "partly" in desc_lower and "cloud" in desc_lower:
+            return "⛅"
+        elif "mostly" in desc_lower and ("sunny" in desc_lower or "fine" in desc_lower):
+            return "🌤️"
+        elif "cloud" in desc_lower or "overcast" in desc_lower:
+            return "☁️"
+        elif "fog" in desc_lower or "mist" in desc_lower:
+            return "🌫️"
+        elif "wind" in desc_lower:
+            return "💨"
+        elif "snow" in desc_lower:
+            return "❄️"
+        else:
+            return "🌡️"  # Default temperature icon

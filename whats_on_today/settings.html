@@ -12,21 +12,21 @@
 </div>
 
 <div class="form-group">
-    <label for="bomUrl" class="form-label">BOM Weather JSON URL (Optional)</label>
+    <label for="bomUrl" class="form-label">BOM Weather URL (Optional)</label>
     <input
         type="url"
         id="bomUrl"
         name="bomUrl"
-        placeholder="https://www.bom.gov.au/fwo/IDN60801/IDN60801.95757.json"
+        placeholder="https://www.bom.gov.au/fwo/IDN11060/IDN11060.94768.json"
         class="form-input"
     >
     <small class="form-hint">
-        Display weather when no events. Find your observation JSON URL:
-        <a href="http://www.bom.gov.au/nsw/observations/map.shtml" target="_blank">NSW</a> |
-        <a href="http://www.bom.gov.au/vic/observations/map.shtml" target="_blank">VIC</a> |
-        <a href="http://www.bom.gov.au/qld/observations/map.shtml" target="_blank">QLD</a> |
-        <a href="http://www.bom.gov.au/wa/observations/map.shtml" target="_blank">WA</a>
-        (Click station → copy JSON link)
+        Display weather when no events. Use forecast URL (preferred) or observation URL.
+        Forecast URLs provide descriptions, icons, min/max temps, and rain chance.
+        Find forecast URLs by inspecting network requests on BOM's forecast pages:
+        <a href="http://www.bom.gov.au/nsw/forecasts/" target="_blank">NSW</a> |
+        <a href="http://www.bom.gov.au/vic/forecasts/" target="_blank">VIC</a> |
+        <a href="http://www.bom.gov.au/qld/forecasts/" target="_blank">QLD</a>
     </small>
 </div>
 
