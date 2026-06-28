@@ -208,7 +208,7 @@ class WhatsOnToday(BasePlugin):
             return []
 
     def fetch_weather(self, latitude, longitude, timezone):
-        """Fetch weather forecast from Open Meteo BOM API.
+        """Fetch weather forecast from Open Meteo API.
         
         Args:
             latitude: Location latitude (e.g., "-33.87" for Sydney)
@@ -219,8 +219,8 @@ class WhatsOnToday(BasePlugin):
             Dictionary with weather data or None if fetch fails
         """
         try:
-            # Open Meteo BOM API endpoint
-            url = "https://api.open-meteo.com/v1/bom"
+            # Open Meteo Forecast API endpoint (uses multiple weather models)
+            url = "https://api.open-meteo.com/v1/forecast"
             
             params = {
                 "latitude": latitude,
