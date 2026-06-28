@@ -3,6 +3,7 @@ import requests
 import icalendar
 import recurring_ical_events
 import pytz
+import os
 from datetime import datetime, date, timedelta
 from plugins.base_plugin.base_plugin import BasePlugin
 
@@ -261,9 +262,14 @@ class WhatsOnToday(BasePlugin):
             primary_code = daily_weather_code if daily_weather_code is not None else weather_code
             
             # Get weather description and icon from WMO code
-            description, icon = self._get_weather_from_code(primary_code)
+            description, icon_filename = self._get_weather_from_code(primary_code)
+            
+            # Build absolute path to icon file
+            plugin_dir = os.path.dirname(os.path.abspath(__file__))
+            icon_path = os.path.join(plugin_dir, "render", "icons", icon_filename)
             
             logger.info(f"Successfully fetched weather: {temp_max}°C (max) - {description}")
+            logger.info(f"Weather icon path: {icon_path}")
             
             return {
                 "type": "forecast",
@@ -272,7 +278,7 @@ class WhatsOnToday(BasePlugin):
                 "min_temp": temp_min,
                 "max_temp": temp_max,
                 "description": description,
-                "icon": icon,
+                "icon": icon_path,
                 "rain_chance": rain_chance,
                 "humidity": humidity,
                 "wind_speed": wind_speed,
