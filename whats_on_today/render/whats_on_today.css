@@ -270,7 +270,7 @@
   font-weight: 700;
   opacity: 0.9;
   text-transform: capitalize;
-  margin-top: 1dvh;
+  margin-top: 0.5dvh;
 }
 
 .wot-weather-rain {
@@ -282,8 +282,8 @@
 .wot-weather-details {
   display: flex;
   flex-direction: column;
-  gap: 1dvh;
-  margin-top: 2dvh;
+  gap: 0.5dvh;
+  margin-top: 0.5dvh;
 }
 
 .wot-weather-detail {

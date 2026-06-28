@@ -34,16 +34,16 @@
             </div>
             {% endfor %}
         {% elif weather %}
-            <div class="wot-weather">
+            <div class="wot-weather wot-{{ weather.temp_color }}">
                 {% if weather.icon %}
                 <div class="wot-weather-icon">
                     <img src="file://{{ weather.icon }}" alt="{{ weather.description }}" />
                 </div>
                 {% endif %}
                 
-                {# Hourly weather display #}
+                {# Current weather display #}
                 {% if weather.temperature %}
-                <div class="wot-weather-temp wot-{{ weather.temp_color }}">
+                <div class="wot-weather-temp">
                     {{ weather.temperature }}°
                 </div>
                 {% endif %}

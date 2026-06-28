@@ -234,7 +234,8 @@ class WhatsOnToday(BasePlugin):
             params = {
                 "latitude": latitude,
                 "longitude": longitude,
-                "hourly": "temperature_2m,relative_humidity_2m,precipitation_probability,weather_code",
+                "current": "temperature_2m,relative_humidity_2m,weather_code",
+                "hourly": "precipitation_probability",
                 "timezone": timezone,
                 "forecast_days": 1
             }
@@ -244,31 +245,27 @@ class WhatsOnToday(BasePlugin):
             response.raise_for_status()
             data = response.json()
             
-            # Extract hourly weather - find current hour index
+            # Extract current observations (actual measured data)
+            current = data.get("current", {})
+            temperature = current.get("temperature_2m")
+            humidity = current.get("relative_humidity_2m")
+            weather_code = current.get("weather_code")
+            
+            # Get rain probability from hourly forecast (current hour)
             hourly = data.get("hourly", {})
             hourly_times = hourly.get("time", [])
             
             # Get current time in the specified timezone
             tz = pytz.timezone(timezone)
             now = datetime.now(tz)
-            
-            # Find the index for the current hour
-            # Open Meteo returns times in ISO format: "2026-06-28T14:00"
             current_hour_str = now.strftime("%Y-%m-%dT%H:00")
             
+            rain_chance = None
             try:
                 hour_index = hourly_times.index(current_hour_str)
-            except ValueError:
-                # If exact hour not found, use first hour as fallback
-                logger.warning(f"Current hour {current_hour_str} not found in hourly data, using index 0")
-                hour_index = 0
-            
-            logger.info(f"Using hourly index {hour_index} for time {current_hour_str}")
-            
-            temperature = hourly.get("temperature_2m", [None])[hour_index]
-            humidity = hourly.get("relative_humidity_2m", [None])[hour_index]
-            rain_chance = hourly.get("precipitation_probability", [None])[hour_index]
-            weather_code = hourly.get("weather_code", [None])[hour_index]
+                rain_chance = hourly.get("precipitation_probability", [None])[hour_index]
+            except (ValueError, IndexError):
+                logger.warning(f"Could not get rain probability for {current_hour_str}")
             
             # Get weather description and icon from WMO code
             description, icon_filename = self._get_weather_from_code(weather_code)
@@ -280,11 +277,11 @@ class WhatsOnToday(BasePlugin):
             # Determine temperature color class
             temp_color = self._get_temp_color(temperature)
             
-            logger.info(f"Successfully fetched weather: {temperature}°C - {description}")
+            logger.info(f"Successfully fetched weather: {temperature}°C (current) - {description}")
             logger.info(f"Weather icon path: {icon_path}")
             
             return {
-                "type": "hourly",
+                "type": "current",
                 "temperature": temperature,
                 "temp_color": temp_color,
                 "description": description,
