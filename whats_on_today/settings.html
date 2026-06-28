@@ -12,20 +12,21 @@
 </div>
 
 <div class="form-group">
-    <label for="bomStationId" class="form-label">BOM Weather Station (Optional)</label>
+    <label for="bomUrl" class="form-label">BOM Weather JSON URL (Optional)</label>
     <input
-        type="text"
-        id="bomStationId"
-        name="bomStationId"
-        placeholder="94768 or full URL"
+        type="url"
+        id="bomUrl"
+        name="bomUrl"
+        placeholder="https://www.bom.gov.au/fwo/IDN60801/IDN60801.95757.json"
         class="form-input"
     >
     <small class="form-hint">
-        Display weather when no events. Use station ID (NSW: 94768 Sydney, 66078 Orange) or full BOM JSON URL for other states.
+        Display weather when no events. Find your observation JSON URL:
         <a href="http://www.bom.gov.au/nsw/observations/map.shtml" target="_blank">NSW</a> |
         <a href="http://www.bom.gov.au/vic/observations/map.shtml" target="_blank">VIC</a> |
         <a href="http://www.bom.gov.au/qld/observations/map.shtml" target="_blank">QLD</a> |
         <a href="http://www.bom.gov.au/wa/observations/map.shtml" target="_blank">WA</a>
+        (Click station → copy JSON link)
     </small>
 </div>
 
@@ -33,7 +34,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         if (loadPluginSettings) {
             document.getElementById('calendarURL').value = pluginSettings.calendarURL || '';
-            document.getElementById('bomStationId').value = pluginSettings.bomStationId || '';
+            document.getElementById('bomUrl').value = pluginSettings.bomUrl || '';
         }
     });
 </script>

@@ -37,9 +37,9 @@ class WhatsOnToday(BasePlugin):
         # Fetch weather data if no events
         weather = None
         if not events:
-            bom_station_id = settings.get("bomStationId", "").strip()
-            if bom_station_id:
-                weather = self.fetch_bom_weather(bom_station_id)
+            bom_url = settings.get("bomUrl", "").strip()
+            if bom_url:
+                weather = self.fetch_bom_weather(bom_url)
 
         day_name = now.strftime("%A")
         long_date = now.strftime("%-d %B %Y")
@@ -206,24 +206,19 @@ class WhatsOnToday(BasePlugin):
         except Exception:
             return []
 
-    def fetch_bom_weather(self, station_id):
+    def fetch_bom_weather(self, bom_url):
         """Fetch current weather from Australian Bureau of Meteorology.
         
         Args:
-            station_id: BOM station ID or full URL to observation JSON
-                       Examples: '94768' (Sydney), or full URL like 
-                       'http://www.bom.gov.au/fwo/IDN60901/IDN60901.94768.json'
+            bom_url: Full URL to BOM observation JSON
+                    Example: 'https://www.bom.gov.au/fwo/IDN60801/IDN60801.95757.json'
+                    Find your URL at http://www.bom.gov.au/nsw/observations/map.shtml
             
         Returns:
             Dictionary with weather data or None if fetch fails
         """
         try:
-            # If station_id looks like a URL, use it directly
-            if station_id.startswith('http://') or station_id.startswith('https://'):
-                url = station_id
-            else:
-                # Default to NSW format - users should provide full URL for other states
-                url = f"https://www.bom.gov.au/fwo/IDN60901/IDN60901.{station_id}.json"
+            url = bom_url.strip()
             
             # BOM requires a User-Agent header to avoid 403 errors
             headers = {
@@ -268,8 +263,7 @@ class WhatsOnToday(BasePlugin):
             }
             
         except requests.exceptions.HTTPError as exc:
-            logger.error(f"BOM HTTP error: {exc}. Check station ID or URL format. "
-                        f"For non-NSW stations, provide the full BOM JSON URL.")
+            logger.error(f"BOM HTTP error: {exc}. Check that the URL is correct.")
             return None
         except requests.exceptions.RequestException as exc:
             logger.error(f"Failed to fetch BOM weather: {exc}")
