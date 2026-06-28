@@ -250,12 +250,18 @@ class WhatsOnToday(BasePlugin):
             # Get location name from header
             location = data.get("observations", {}).get("header", [{}])[0].get("name", "Unknown")
             
+            # Clean up weather description - BOM uses "-" for "not reported"
+            if weather_desc and weather_desc != "-":
+                weather_desc = weather_desc.strip()
+            else:
+                weather_desc = None
+            
             logger.info(f"Successfully fetched weather for {location}: {temp}°C")
             
             return {
                 "temperature": temp,
                 "apparent_temp": apparent_temp,
-                "description": weather_desc or "No description",
+                "description": weather_desc,
                 "humidity": humidity,
                 "wind_speed": wind_speed_kmh,
                 "wind_direction": wind_dir,
