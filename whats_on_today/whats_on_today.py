@@ -234,7 +234,7 @@ class WhatsOnToday(BasePlugin):
             params = {
                 "latitude": latitude,
                 "longitude": longitude,
-                "current": "temperature_2m,apparent_temperature,precipitation,weather_code,relative_humidity_2m,wind_speed_10m",
+                "current": "temperature_2m,precipitation,weather_code,relative_humidity_2m,wind_speed_10m",
                 "daily": "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max",
                 "timezone": timezone,
                 "forecast_days": 1
@@ -250,7 +250,6 @@ class WhatsOnToday(BasePlugin):
             daily = data.get("daily", {})
             
             temp_current = current.get("temperature_2m")
-            apparent_temp = current.get("apparent_temperature")
             weather_code = current.get("weather_code")
             humidity = current.get("relative_humidity_2m")
             wind_speed = current.get("wind_speed_10m")
