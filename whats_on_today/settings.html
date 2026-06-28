@@ -12,17 +12,20 @@
 </div>
 
 <div class="form-group">
-    <label for="bomStationId" class="form-label">BOM Weather Station ID (Optional)</label>
+    <label for="bomStationId" class="form-label">BOM Weather Station (Optional)</label>
     <input
         type="text"
         id="bomStationId"
         name="bomStationId"
-        placeholder="94768"
+        placeholder="94768 or full URL"
         class="form-input"
     >
     <small class="form-hint">
-        Display weather when no events. Common IDs: Sydney (94768), Melbourne (95936), Brisbane (94576), Perth (94610), Adelaide (94672), Canberra (94926).
-        <a href="http://www.bom.gov.au/nsw/observations/map.shtml" target="_blank">Find your station ID</a>
+        Display weather when no events. Use station ID (NSW: 94768 Sydney, 66078 Orange) or full BOM JSON URL for other states.
+        <a href="http://www.bom.gov.au/nsw/observations/map.shtml" target="_blank">NSW</a> |
+        <a href="http://www.bom.gov.au/vic/observations/map.shtml" target="_blank">VIC</a> |
+        <a href="http://www.bom.gov.au/qld/observations/map.shtml" target="_blank">QLD</a> |
+        <a href="http://www.bom.gov.au/wa/observations/map.shtml" target="_blank">WA</a>
     </small>
 </div>
 

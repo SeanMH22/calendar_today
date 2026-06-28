@@ -210,15 +210,28 @@ class WhatsOnToday(BasePlugin):
         """Fetch current weather from Australian Bureau of Meteorology.
         
         Args:
-            station_id: BOM station ID (e.g., '94768' for Sydney Observatory Hill)
+            station_id: BOM station ID or full URL to observation JSON
+                       Examples: '94768' (Sydney), or full URL like 
+                       'http://www.bom.gov.au/fwo/IDN60901/IDN60901.94768.json'
             
         Returns:
             Dictionary with weather data or None if fetch fails
         """
         try:
-            # BOM observation JSON endpoint
-            url = f"http://www.bom.gov.au/fwo/IDN60901/IDN60901.{station_id}.json"
-            response = requests.get(url, timeout=10)
+            # If station_id looks like a URL, use it directly
+            if station_id.startswith('http://') or station_id.startswith('https://'):
+                url = station_id
+            else:
+                # Default to NSW format - users should provide full URL for other states
+                url = f"http://www.bom.gov.au/fwo/IDN60901/IDN60901.{station_id}.json"
+            
+            # BOM requires a User-Agent header to avoid 403 errors
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (compatible; InkyPi Calendar Display)'
+            }
+            
+            logger.info(f"Fetching BOM weather from: {url}")
+            response = requests.get(url, headers=headers, timeout=10)
             response.raise_for_status()
             data = response.json()
             
@@ -242,6 +255,8 @@ class WhatsOnToday(BasePlugin):
             # Get location name from header
             location = data.get("observations", {}).get("header", [{}])[0].get("name", "Unknown")
             
+            logger.info(f"Successfully fetched weather for {location}: {temp}°C")
+            
             return {
                 "temperature": temp,
                 "apparent_temp": apparent_temp,
@@ -252,6 +267,10 @@ class WhatsOnToday(BasePlugin):
                 "location": location,
             }
             
+        except requests.exceptions.HTTPError as exc:
+            logger.error(f"BOM HTTP error: {exc}. Check station ID or URL format. "
+                        f"For non-NSW stations, provide the full BOM JSON URL.")
+            return None
         except requests.exceptions.RequestException as exc:
             logger.error(f"Failed to fetch BOM weather: {exc}")
             return None
