@@ -37,9 +37,10 @@ class WhatsOnToday(BasePlugin):
         # Fetch weather data if no events
         weather = None
         if not events:
-            bom_url = settings.get("bomUrl", "").strip()
-            if bom_url:
-                weather = self.fetch_bom_weather(bom_url)
+            latitude = settings.get("weatherLatitude", "").strip()
+            longitude = settings.get("weatherLongitude", "").strip()
+            if latitude and longitude:
+                weather = self.fetch_weather(latitude, longitude, timezone)
 
         day_name = now.strftime("%A")
         long_date = now.strftime("%-d %B %Y")
@@ -206,164 +207,121 @@ class WhatsOnToday(BasePlugin):
         except Exception:
             return []
 
-    def fetch_bom_weather(self, bom_url):
-        """Fetch weather forecast from Australian Bureau of Meteorology.
+    def fetch_weather(self, latitude, longitude, timezone):
+        """Fetch weather forecast from Open Meteo BOM API.
         
         Args:
-            bom_url: Full URL to BOM forecast or observation JSON
-                    Forecast example: 'https://www.bom.gov.au/fwo/IDN11060/IDN11060.94768.json'
-                    Observation fallback: 'https://www.bom.gov.au/fwo/IDN60801/IDN60801.95757.json'
+            latitude: Location latitude (e.g., "-33.87" for Sydney)
+            longitude: Location longitude (e.g., "151.21" for Sydney)
+            timezone: Timezone string (e.g., "Australia/Sydney")
             
         Returns:
             Dictionary with weather data or None if fetch fails
         """
         try:
-            url = bom_url.strip()
+            # Open Meteo BOM API endpoint
+            url = "https://api.open-meteo.com/v1/bom"
             
-            # BOM requires a User-Agent header to avoid 403 errors
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (compatible; InkyPi Calendar Display)'
+            params = {
+                "latitude": latitude,
+                "longitude": longitude,
+                "current": "temperature_2m,apparent_temperature,precipitation,weather_code,relative_humidity_2m,wind_speed_10m",
+                "daily": "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max",
+                "timezone": timezone,
+                "forecast_days": 1
             }
             
-            logger.info(f"Fetching BOM weather from: {url}")
-            response = requests.get(url, headers=headers, timeout=10)
+            logger.info(f"Fetching weather from Open Meteo for lat={latitude}, lon={longitude}")
+            response = requests.get(url, params=params, timeout=10)
             response.raise_for_status()
             data = response.json()
             
-            # Try to parse as forecast data first (preferred)
-            if "data" in data and isinstance(data["data"], list) and len(data["data"]) > 0:
-                return self._parse_forecast_data(data)
+            # Extract current weather
+            current = data.get("current", {})
+            daily = data.get("daily", {})
             
-            # Fall back to observation data
-            elif "observations" in data:
-                return self._parse_observation_data(data)
+            temp_current = current.get("temperature_2m")
+            apparent_temp = current.get("apparent_temperature")
+            weather_code = current.get("weather_code")
+            humidity = current.get("relative_humidity_2m")
+            wind_speed = current.get("wind_speed_10m")
             
-            else:
-                logger.warning("Unknown BOM data format")
-                return None
+            # Extract daily forecast
+            temp_max = daily.get("temperature_2m_max", [None])[0]
+            temp_min = daily.get("temperature_2m_min", [None])[0]
+            rain_chance = daily.get("precipitation_probability_max", [None])[0]
+            daily_weather_code = daily.get("weather_code", [None])[0]
             
-        except requests.exceptions.HTTPError as exc:
-            logger.error(f"BOM HTTP error: {exc}. Check that the URL is correct.")
-            return None
-        except requests.exceptions.RequestException as exc:
-            logger.error(f"Failed to fetch BOM weather: {exc}")
-            return None
-        except (KeyError, ValueError, IndexError) as exc:
-            logger.error(f"Failed to parse BOM weather data: {exc}")
-            return None
-    
-    def _parse_forecast_data(self, data):
-        """Parse BOM forecast JSON format."""
-        try:
-            # Get today's forecast (first entry)
-            forecast_data = data["data"][0]
+            # Use daily weather code if available, otherwise current
+            primary_code = daily_weather_code if daily_weather_code is not None else weather_code
             
-            # Extract forecast fields
-            min_temp = forecast_data.get("temp_min")
-            max_temp = forecast_data.get("temp_max")
-            short_text = forecast_data.get("short_text", "")
-            precis = forecast_data.get("precis", "")
-            icon_descriptor = forecast_data.get("icon_descriptor", "")
-            rain_chance = forecast_data.get("rain", {}).get("chance", None)
+            # Get weather description and icon from WMO code
+            description, icon = self._get_weather_from_code(primary_code)
             
-            # Use short_text or precis for description
-            description = short_text or precis or icon_descriptor
-            
-            # Get location from metadata
-            location = data.get("metadata", {}).get("name", "Unknown")
-            
-            # Map icon descriptor to weather icon
-            weather_icon = self._get_weather_icon(icon_descriptor or description)
-            
-            logger.info(f"Successfully fetched forecast for {location}: {max_temp}°C - {description}")
+            logger.info(f"Successfully fetched weather: {temp_max}°C (max) - {description}")
             
             return {
                 "type": "forecast",
-                "temperature": max_temp,  # Use max temp for forecast
-                "min_temp": min_temp,
-                "max_temp": max_temp,
-                "description": description if description else None,
-                "icon": weather_icon,
-                "rain_chance": rain_chance,
-                "location": location,
-            }
-        except Exception as exc:
-            logger.warning(f"Failed to parse forecast data: {exc}")
-            return None
-    
-    def _parse_observation_data(self, data):
-        """Parse BOM observation JSON format (fallback)."""
-        try:
-            observations = data.get("observations", {}).get("data", [])
-            if not observations:
-                return None
-            
-            obs = observations[0]
-            
-            # Extract observation fields
-            temp = obs.get("air_temp")
-            apparent_temp = obs.get("apparent_t")
-            weather_desc = obs.get("weather", "")
-            humidity = obs.get("rel_hum")
-            wind_speed_kmh = obs.get("wind_spd_kmh")
-            wind_dir = obs.get("wind_dir", "")
-            
-            location = data.get("observations", {}).get("header", [{}])[0].get("name", "Unknown")
-            
-            # Clean up weather description
-            if weather_desc and weather_desc != "-":
-                weather_desc = weather_desc.strip()
-            else:
-                weather_desc = None
-            
-            weather_icon = self._get_weather_icon(weather_desc) if weather_desc else None
-            
-            logger.info(f"Successfully fetched observation for {location}: {temp}°C")
-            
-            return {
-                "type": "observation",
-                "temperature": temp,
+                "temperature": temp_current,
                 "apparent_temp": apparent_temp,
-                "description": weather_desc,
-                "icon": weather_icon,
+                "min_temp": temp_min,
+                "max_temp": temp_max,
+                "description": description,
+                "icon": icon,
+                "rain_chance": rain_chance,
                 "humidity": humidity,
-                "wind_speed": wind_speed_kmh,
-                "wind_direction": wind_dir,
-                "location": location,
+                "wind_speed": wind_speed,
             }
-        except Exception as exc:
-            logger.warning(f"Failed to parse observation data: {exc}")
+            
+        except requests.exceptions.RequestException as exc:
+            logger.error(f"Failed to fetch weather from Open Meteo: {exc}")
+            return None
+        except (KeyError, ValueError, IndexError) as exc:
+            logger.error(f"Failed to parse weather data: {exc}")
             return None
     
-    def _get_weather_icon(self, description):
-        """Map weather description to emoji icon."""
-        if not description:
-            return None
+    def _get_weather_from_code(self, code):
+        """Map WMO weather code to description and emoji icon.
         
-        desc_lower = description.lower()
+        WMO Weather interpretation codes (WW):
+        https://open-meteo.com/en/docs
         
-        # BOM icon descriptors and common terms
-        if "sunny" in desc_lower or "clear" in desc_lower or "fine" in desc_lower:
-            return "☀️"
-        elif "rain" in desc_lower and "shower" in desc_lower:
-            return "🌦️"
-        elif "shower" in desc_lower:
-            return "🌧️"
-        elif "rain" in desc_lower:
-            return "🌧️"
-        elif "storm" in desc_lower or "thunder" in desc_lower:
-            return "⛈️"
-        elif "partly" in desc_lower and "cloud" in desc_lower:
-            return "⛅"
-        elif "mostly" in desc_lower and ("sunny" in desc_lower or "fine" in desc_lower):
-            return "🌤️"
-        elif "cloud" in desc_lower or "overcast" in desc_lower:
-            return "☁️"
-        elif "fog" in desc_lower or "mist" in desc_lower:
-            return "🌫️"
-        elif "wind" in desc_lower:
-            return "💨"
-        elif "snow" in desc_lower:
-            return "❄️"
-        else:
-            return "🌡️"  # Default temperature icon
+        Returns:
+            Tuple of (description, icon)
+        """
+        if code is None:
+            return ("Unknown", "🌡️")
+        
+        # WMO code mapping
+        code_map = {
+            0: ("Clear sky", "☀️"),
+            1: ("Mainly clear", "🌤️"),
+            2: ("Partly cloudy", "⛅"),
+            3: ("Overcast", "☁️"),
+            45: ("Foggy", "🌫️"),
+            48: ("Fog", "🌫️"),
+            51: ("Light drizzle", "🌦️"),
+            53: ("Moderate drizzle", "🌦️"),
+            55: ("Dense drizzle", "🌧️"),
+            56: ("Freezing drizzle", "🌧️"),
+            57: ("Freezing drizzle", "🌧️"),
+            61: ("Slight rain", "🌧️"),
+            63: ("Moderate rain", "🌧️"),
+            65: ("Heavy rain", "🌧️"),
+            66: ("Freezing rain", "🌧️"),
+            67: ("Freezing rain", "🌧️"),
+            71: ("Slight snow", "❄️"),
+            73: ("Moderate snow", "❄️"),
+            75: ("Heavy snow", "❄️"),
+            77: ("Snow grains", "❄️"),
+            80: ("Slight showers", "🌦️"),
+            81: ("Moderate showers", "🌧️"),
+            82: ("Violent showers", "🌧️"),
+            85: ("Slight snow showers", "❄️"),
+            86: ("Heavy snow showers", "❄️"),
+            95: ("Thunderstorm", "⛈️"),
+            96: ("Thunderstorm with hail", "⛈️"),
+            99: ("Thunderstorm with hail", "⛈️"),
+        }
+        
+        return code_map.get(code, ("Unknown", "🌡️"))

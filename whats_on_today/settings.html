@@ -12,21 +12,33 @@
 </div>
 
 <div class="form-group">
-    <label for="bomUrl" class="form-label">BOM Weather URL (Optional)</label>
+    <label for="weatherLatitude" class="form-label">Weather Latitude (Optional)</label>
     <input
-        type="url"
-        id="bomUrl"
-        name="bomUrl"
-        placeholder="https://www.bom.gov.au/fwo/IDN11060/IDN11060.94768.json"
+        type="text"
+        id="weatherLatitude"
+        name="weatherLatitude"
+        placeholder="-33.87"
         class="form-input"
     >
     <small class="form-hint">
-        Display weather when no events. Use forecast URL (preferred) or observation URL.
-        Forecast URLs provide descriptions, icons, min/max temps, and rain chance.
-        Find forecast URLs by inspecting network requests on BOM's forecast pages:
-        <a href="http://www.bom.gov.au/nsw/forecasts/" target="_blank">NSW</a> |
-        <a href="http://www.bom.gov.au/vic/forecasts/" target="_blank">VIC</a> |
-        <a href="http://www.bom.gov.au/qld/forecasts/" target="_blank">QLD</a>
+        Your location's latitude for weather display when no events.
+        Examples: Sydney (-33.87), Melbourne (-37.81), Brisbane (-27.47), Lucas Heights (-34.05).
+        <a href="https://www.latlong.net/convert-address-to-lat-long.html" target="_blank">Find coordinates</a>
+    </small>
+</div>
+
+<div class="form-group">
+    <label for="weatherLongitude" class="form-label">Weather Longitude (Optional)</label>
+    <input
+        type="text"
+        id="weatherLongitude"
+        name="weatherLongitude"
+        placeholder="151.21"
+        class="form-input"
+    >
+    <small class="form-hint">
+        Your location's longitude for weather display.
+        Examples: Sydney (151.21), Melbourne (144.96), Brisbane (153.03), Lucas Heights (150.98).
     </small>
 </div>
 
@@ -34,7 +46,8 @@
     document.addEventListener('DOMContentLoaded', () => {
         if (loadPluginSettings) {
             document.getElementById('calendarURL').value = pluginSettings.calendarURL || '';
-            document.getElementById('bomUrl').value = pluginSettings.bomUrl || '';
+            document.getElementById('weatherLatitude').value = pluginSettings.weatherLatitude || '';
+            document.getElementById('weatherLongitude').value = pluginSettings.weatherLongitude || '';
         }
     });
 </script>
