@@ -302,7 +302,7 @@ class WhatsOnToday(BasePlugin):
             45: ("Foggy", "fog.svg"),
             48: ("Fog", "fog.svg"),
             51: ("Light drizzle", "drizzle.svg"),
-            53: ("Moderate drizzle", "drizzle.svg"),
+            53: ("Moderate drizzle", "moderate-drizzle.svg"),
             55: ("Dense drizzle", "rain.svg"),
             56: ("Freezing drizzle", "sleet.svg"),
             57: ("Freezing drizzle", "sleet.svg"),
