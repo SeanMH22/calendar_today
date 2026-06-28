@@ -50,10 +50,13 @@ class WhatsOnToday(BasePlugin):
 
         day_name = now.strftime("%A")
         long_date = now.strftime("%-d %B %Y")
+        # Determine if weekend (Saturday=5, Sunday=6)
+        day_type = "weekend" if now.weekday() >= 5 else "weekday"
 
         template_params = {
             "day_name": day_name,
             "long_date": long_date,
+            "day_type": day_type,
             "events": events,
             "weather": weather,
             "time_format": time_format,
@@ -268,15 +271,18 @@ class WhatsOnToday(BasePlugin):
             plugin_dir = os.path.dirname(os.path.abspath(__file__))
             icon_path = os.path.join(plugin_dir, "render", "icons", icon_filename)
             
+            # Determine temperature color class
+            temp_color = self._get_temp_color(temp_max)
+            
             logger.info(f"Successfully fetched weather: {temp_max}°C (max) - {description}")
             logger.info(f"Weather icon path: {icon_path}")
             
             return {
                 "type": "forecast",
                 "temperature": temp_current,
-                "apparent_temp": apparent_temp,
                 "min_temp": temp_min,
                 "max_temp": temp_max,
+                "temp_color": temp_color,
                 "description": description,
                 "icon": icon_path,
                 "rain_chance": rain_chance,
@@ -337,3 +343,24 @@ class WhatsOnToday(BasePlugin):
         }
         
         return code_map.get(code, ("Unknown", "unknown.svg"))
+    
+    def _get_temp_color(self, temp):
+        """Determine color class based on temperature.
+        
+        Args:
+            temp: Temperature in Celsius
+            
+        Returns:
+            Color class name: 'temp-cold', 'temp-mild', 'temp-warm', or 'temp-hot'
+        """
+        if temp is None:
+            return "temp-mild"
+        
+        if temp < 18:
+            return "temp-cold"  # Blue
+        elif temp <= 24:
+            return "temp-mild"  # Green
+        elif temp <= 28:
+            return "temp-warm"  # Orange
+        else:
+            return "temp-hot"   # Red

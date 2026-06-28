@@ -30,6 +30,15 @@
   letter-spacing: -0.02em;
 }
 
+/* Weekday colors */
+.wot-weekday .wot-day-name {
+  color: #00008B; /* Dark blue */
+}
+
+.wot-weekend .wot-day-name {
+  color: #006400; /* Dark green */
+}
+
 .wot-long-date {
   font-size: min(7dvw, 5dvh);
   font-weight: 700;
@@ -47,8 +56,8 @@
 .wot-divider {
   flex: 0 0 auto;
   height: 0.8dvh;
-  background: currentColor;
-  opacity: 0.8;
+  background: #FFD700; /* Yellow */
+  opacity: 1;
   margin: 2dvh 0;
 }
 
@@ -282,4 +291,26 @@
   font-weight: 600;
   opacity: 0.85;
   display: block;
+}
+
+/* ── Temperature Color Coding ── */
+
+/* Cold: < 18°C */
+.wot-temp-cold .wot-temp-max {
+  color: #0000FF; /* Blue */
+}
+
+/* Mild: 18-24°C */
+.wot-temp-mild .wot-temp-max {
+  color: #008000; /* Green */
+}
+
+/* Warm: 25-28°C */
+.wot-temp-warm .wot-temp-max {
+  color: #FF8000; /* Orange */
+}
+
+/* Hot: > 28°C */
+.wot-temp-hot .wot-temp-max {
+  color: #FF0000; /* Red */
 }

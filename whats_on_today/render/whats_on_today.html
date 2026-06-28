@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="wot-wrapper">
-    <header class="wot-header">
+    <header class="wot-header wot-{{ day_type }}">
         <h3>TODAY IS:</h3>
         <h1 class="wot-day-name">{{ day_name }}</h1>
         <h3 class="wot-long-date">{{ long_date }}</h3>
@@ -43,7 +43,7 @@
                 
                 {% if weather.type == "forecast" %}
                     {# Forecast display with min/max #}
-                    <div class="wot-weather-temp-range">
+                    <div class="wot-weather-temp-range wot-{{ weather.temp_color }}">
                         {% if weather.max_temp %}
                         <span class="wot-temp-max">{{ weather.max_temp }}°</span>
                         {% endif %}
@@ -67,12 +67,6 @@
                     <div class="wot-weather-temp">
                         {% if weather.temperature %}{{ weather.temperature }}°C{% endif %}
                     </div>
-                    
-                    {% if weather.apparent_temp and weather.apparent_temp != weather.temperature %}
-                    <div class="wot-weather-feels-like">
-                        Feels like {{ weather.apparent_temp }}°C
-                    </div>
-                    {% endif %}
                     
                     {% if weather.description %}
                     <div class="wot-weather-description">{{ weather.description }}</div>
