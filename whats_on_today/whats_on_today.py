@@ -234,8 +234,7 @@ class WhatsOnToday(BasePlugin):
             params = {
                 "latitude": latitude,
                 "longitude": longitude,
-                "current": "temperature_2m,precipitation,weather_code,relative_humidity_2m,wind_speed_10m",
-                "daily": "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max",
+                "hourly": "temperature_2m,relative_humidity_2m,precipitation_probability,weather_code",
                 "timezone": timezone,
                 "forecast_days": 1
             }
@@ -245,48 +244,35 @@ class WhatsOnToday(BasePlugin):
             response.raise_for_status()
             data = response.json()
             
-            # Extract current weather
-            current = data.get("current", {})
-            daily = data.get("daily", {})
+            # Extract hourly weather (use first hour = current hour)
+            hourly = data.get("hourly", {})
             
-            temp_current = current.get("temperature_2m")
-            weather_code = current.get("weather_code")
-            humidity = current.get("relative_humidity_2m")
-            wind_speed = current.get("wind_speed_10m")
-            
-            # Extract daily forecast
-            temp_max = daily.get("temperature_2m_max", [None])[0]
-            temp_min = daily.get("temperature_2m_min", [None])[0]
-            rain_chance = daily.get("precipitation_probability_max", [None])[0]
-            daily_weather_code = daily.get("weather_code", [None])[0]
-            
-            # Use daily weather code if available, otherwise current
-            primary_code = daily_weather_code if daily_weather_code is not None else weather_code
+            temperature = hourly.get("temperature_2m", [None])[0]
+            humidity = hourly.get("relative_humidity_2m", [None])[0]
+            rain_chance = hourly.get("precipitation_probability", [None])[0]
+            weather_code = hourly.get("weather_code", [None])[0]
             
             # Get weather description and icon from WMO code
-            description, icon_filename = self._get_weather_from_code(primary_code)
+            description, icon_filename = self._get_weather_from_code(weather_code)
             
             # Build absolute path to icon file
             plugin_dir = os.path.dirname(os.path.abspath(__file__))
             icon_path = os.path.join(plugin_dir, "render", "icons", icon_filename)
             
             # Determine temperature color class
-            temp_color = self._get_temp_color(temp_max)
+            temp_color = self._get_temp_color(temperature)
             
-            logger.info(f"Successfully fetched weather: {temp_max}°C (max) - {description}")
+            logger.info(f"Successfully fetched weather: {temperature}°C - {description}")
             logger.info(f"Weather icon path: {icon_path}")
             
             return {
-                "type": "forecast",
-                "temperature": temp_current,
-                "min_temp": temp_min,
-                "max_temp": temp_max,
+                "type": "hourly",
+                "temperature": temperature,
                 "temp_color": temp_color,
                 "description": description,
                 "icon": icon_path,
                 "rain_chance": rain_chance,
                 "humidity": humidity,
-                "wind_speed": wind_speed,
             }
             
         except requests.exceptions.RequestException as exc:

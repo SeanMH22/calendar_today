@@ -296,21 +296,21 @@
 /* ── Temperature Color Coding ── */
 
 /* Cold: < 18°C */
-.wot-temp-cold .wot-temp-max {
+.wot-temp-cold .wot-weather-temp {
   color: #0000FF; /* Blue */
 }
 
 /* Mild: 18-24°C */
-.wot-temp-mild .wot-temp-max {
+.wot-temp-mild .wot-weather-temp {
   color: #008000; /* Green */
 }
 
 /* Warm: 25-28°C */
-.wot-temp-warm .wot-temp-max {
+.wot-temp-warm .wot-weather-temp {
   color: #FF8000; /* Orange */
 }
 
 /* Hot: > 28°C */
-.wot-temp-hot .wot-temp-max {
+.wot-temp-hot .wot-weather-temp {
   color: #FF0000; /* Red */
 }
