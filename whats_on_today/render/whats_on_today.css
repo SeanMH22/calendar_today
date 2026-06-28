@@ -189,3 +189,55 @@
   color: #000000;
   opacity: 1;
 }
+
+/* ── Weather Display ── */
+
+.wot-weather {
+  display: flex;
+  flex-direction: column;
+  gap: 2dvh;
+  padding: 3dvh 0;
+}
+
+.wot-weather-location {
+  font-size: min(7dvw, 5.5dvh);
+  font-weight: 700;
+  opacity: 0.9;
+  margin-bottom: 1dvh;
+}
+
+.wot-weather-temp {
+  font-size: min(28dvw, 20dvh);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.wot-weather-feels-like {
+  font-size: min(7dvw, 5.5dvh);
+  font-weight: 600;
+  opacity: 0.8;
+  margin-top: -1dvh;
+}
+
+.wot-weather-description {
+  font-size: min(9dvw, 7dvh);
+  font-weight: 700;
+  opacity: 0.9;
+  text-transform: capitalize;
+  margin-top: 1dvh;
+}
+
+.wot-weather-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1dvh;
+  margin-top: 2dvh;
+}
+
+.wot-weather-detail {
+  font-size: min(6dvw, 4.5dvh);
+  font-weight: 600;
+  opacity: 0.85;
+  display: block;
+}

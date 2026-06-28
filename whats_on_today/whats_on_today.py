@@ -34,6 +34,13 @@ class WhatsOnToday(BasePlugin):
 
         events = self.fetch_todays_events(calendar_url, tz, today, time_format, now)
 
+        # Fetch weather data if no events
+        weather = None
+        if not events:
+            bom_station_id = settings.get("bomStationId", "").strip()
+            if bom_station_id:
+                weather = self.fetch_bom_weather(bom_station_id)
+
         day_name = now.strftime("%A")
         long_date = now.strftime("%-d %B %Y")
 
@@ -41,6 +48,7 @@ class WhatsOnToday(BasePlugin):
             "day_name": day_name,
             "long_date": long_date,
             "events": events,
+            "weather": weather,
             "time_format": time_format,
             "plugin_settings": settings,
         }
@@ -197,3 +205,56 @@ class WhatsOnToday(BasePlugin):
             return lines[:max_lines]
         except Exception:
             return []
+
+    def fetch_bom_weather(self, station_id):
+        """Fetch current weather from Australian Bureau of Meteorology.
+        
+        Args:
+            station_id: BOM station ID (e.g., '94768' for Sydney Observatory Hill)
+            
+        Returns:
+            Dictionary with weather data or None if fetch fails
+        """
+        try:
+            # BOM observation JSON endpoint
+            url = f"http://www.bom.gov.au/fwo/IDN60901/IDN60901.{station_id}.json"
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            
+            # Extract observation data
+            observations = data.get("observations", {}).get("data", [])
+            if not observations:
+                logger.warning("No observation data found in BOM response")
+                return None
+            
+            # Get the most recent observation
+            obs = observations[0]
+            
+            # Extract relevant fields
+            temp = obs.get("air_temp")
+            apparent_temp = obs.get("apparent_t")
+            weather_desc = obs.get("weather", "")
+            humidity = obs.get("rel_hum")
+            wind_speed_kmh = obs.get("wind_spd_kmh")
+            wind_dir = obs.get("wind_dir", "")
+            
+            # Get location name from header
+            location = data.get("observations", {}).get("header", [{}])[0].get("name", "Unknown")
+            
+            return {
+                "temperature": temp,
+                "apparent_temp": apparent_temp,
+                "description": weather_desc or "No description",
+                "humidity": humidity,
+                "wind_speed": wind_speed_kmh,
+                "wind_direction": wind_dir,
+                "location": location,
+            }
+            
+        except requests.exceptions.RequestException as exc:
+            logger.error(f"Failed to fetch BOM weather: {exc}")
+            return None
+        except (KeyError, ValueError, IndexError) as exc:
+            logger.error(f"Failed to parse BOM weather data: {exc}")
+            return None

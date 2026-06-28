@@ -33,6 +33,31 @@
                 {% endif %}
             </div>
             {% endfor %}
+        {% elif weather %}
+            <div class="wot-weather">
+                <div class="wot-weather-location">{{ weather.location }}</div>
+                <div class="wot-weather-temp">
+                    {% if weather.temperature %}{{ weather.temperature }}°C{% endif %}
+                </div>
+                {% if weather.apparent_temp and weather.apparent_temp != weather.temperature %}
+                <div class="wot-weather-feels-like">
+                    Feels like {{ weather.apparent_temp }}°C
+                </div>
+                {% endif %}
+                {% if weather.description %}
+                <div class="wot-weather-description">{{ weather.description }}</div>
+                {% endif %}
+                <div class="wot-weather-details">
+                    {% if weather.humidity %}
+                    <span class="wot-weather-detail">Humidity: {{ weather.humidity }}%</span>
+                    {% endif %}
+                    {% if weather.wind_speed %}
+                    <span class="wot-weather-detail">
+                        Wind: {{ weather.wind_direction }} {{ weather.wind_speed }} km/h
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
         {% else %}
             <p class="wot-no-events">No events today.</p>
         {% endif %}
