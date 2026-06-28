@@ -27,7 +27,7 @@ class WhatsOnToday(BasePlugin):
             # Swap to landscape
             dimensions = dimensions[::-1]
 
-        timezone = device_config.get_config("timezone", default="America/New_York")
+        timezone = device_config.get_config("timezone", default="Australia/Sydney")
         time_format = device_config.get_config("time_format", default="12h")
         tz = pytz.timezone(timezone)
         now = datetime.now(tz)
@@ -244,13 +244,31 @@ class WhatsOnToday(BasePlugin):
             response.raise_for_status()
             data = response.json()
             
-            # Extract hourly weather (use first hour = current hour)
+            # Extract hourly weather - find current hour index
             hourly = data.get("hourly", {})
+            hourly_times = hourly.get("time", [])
             
-            temperature = hourly.get("temperature_2m", [None])[0]
-            humidity = hourly.get("relative_humidity_2m", [None])[0]
-            rain_chance = hourly.get("precipitation_probability", [None])[0]
-            weather_code = hourly.get("weather_code", [None])[0]
+            # Get current time in the specified timezone
+            tz = pytz.timezone(timezone)
+            now = datetime.now(tz)
+            
+            # Find the index for the current hour
+            # Open Meteo returns times in ISO format: "2026-06-28T14:00"
+            current_hour_str = now.strftime("%Y-%m-%dT%H:00")
+            
+            try:
+                hour_index = hourly_times.index(current_hour_str)
+            except ValueError:
+                # If exact hour not found, use first hour as fallback
+                logger.warning(f"Current hour {current_hour_str} not found in hourly data, using index 0")
+                hour_index = 0
+            
+            logger.info(f"Using hourly index {hour_index} for time {current_hour_str}")
+            
+            temperature = hourly.get("temperature_2m", [None])[hour_index]
+            humidity = hourly.get("relative_humidity_2m", [None])[hour_index]
+            rain_chance = hourly.get("precipitation_probability", [None])[hour_index]
+            weather_code = hourly.get("weather_code", [None])[hour_index]
             
             # Get weather description and icon from WMO code
             description, icon_filename = self._get_weather_from_code(weather_code)
