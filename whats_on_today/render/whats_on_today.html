@@ -36,7 +36,9 @@
         {% elif weather %}
             <div class="wot-weather">
                 {% if weather.icon %}
-                <div class="wot-weather-icon">{{ weather.icon }}</div>
+                <div class="wot-weather-icon">
+                    <img src="icons/{{ weather.icon }}" alt="{{ weather.description }}" />
+                </div>
                 {% endif %}
                 
                 {% if weather.type == "forecast" %}

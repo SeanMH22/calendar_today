@@ -281,47 +281,48 @@ class WhatsOnToday(BasePlugin):
             return None
     
     def _get_weather_from_code(self, code):
-        """Map WMO weather code to description and emoji icon.
+        """Map WMO weather code to description and SVG icon filename.
         
         WMO Weather interpretation codes (WW):
         https://open-meteo.com/en/docs
         
         Returns:
-            Tuple of (description, icon)
+            Tuple of (description, icon_filename)
         """
         if code is None:
-            return ("Unknown", "🌡️")
+            return ("Unknown", "unknown.svg")
         
-        # WMO code mapping
+        # WMO code mapping to SVG icons
+        # Icons should be placed in whats_on_today/render/icons/
         code_map = {
-            0: ("Clear sky", "☀️"),
-            1: ("Mainly clear", "🌤️"),
-            2: ("Partly cloudy", "⛅"),
-            3: ("Overcast", "☁️"),
-            45: ("Foggy", "🌫️"),
-            48: ("Fog", "🌫️"),
-            51: ("Light drizzle", "🌦️"),
-            53: ("Moderate drizzle", "🌦️"),
-            55: ("Dense drizzle", "🌧️"),
-            56: ("Freezing drizzle", "🌧️"),
-            57: ("Freezing drizzle", "🌧️"),
-            61: ("Slight rain", "🌧️"),
-            63: ("Moderate rain", "🌧️"),
-            65: ("Heavy rain", "🌧️"),
-            66: ("Freezing rain", "🌧️"),
-            67: ("Freezing rain", "🌧️"),
-            71: ("Slight snow", "❄️"),
-            73: ("Moderate snow", "❄️"),
-            75: ("Heavy snow", "❄️"),
-            77: ("Snow grains", "❄️"),
-            80: ("Slight showers", "🌦️"),
-            81: ("Moderate showers", "🌧️"),
-            82: ("Violent showers", "🌧️"),
-            85: ("Slight snow showers", "❄️"),
-            86: ("Heavy snow showers", "❄️"),
-            95: ("Thunderstorm", "⛈️"),
-            96: ("Thunderstorm with hail", "⛈️"),
-            99: ("Thunderstorm with hail", "⛈️"),
+            0: ("Clear sky", "clear-day.svg"),
+            1: ("Mainly clear", "mostly-clear-day.svg"),
+            2: ("Partly cloudy", "partly-cloudy-day.svg"),
+            3: ("Overcast", "cloudy.svg"),
+            45: ("Foggy", "fog.svg"),
+            48: ("Fog", "fog.svg"),
+            51: ("Light drizzle", "drizzle.svg"),
+            53: ("Moderate drizzle", "drizzle.svg"),
+            55: ("Dense drizzle", "rain.svg"),
+            56: ("Freezing drizzle", "sleet.svg"),
+            57: ("Freezing drizzle", "sleet.svg"),
+            61: ("Slight rain", "rain.svg"),
+            63: ("Moderate rain", "rain.svg"),
+            65: ("Heavy rain", "heavy-rain.svg"),
+            66: ("Freezing rain", "sleet.svg"),
+            67: ("Freezing rain", "sleet.svg"),
+            71: ("Slight snow", "snow.svg"),
+            73: ("Moderate snow", "snow.svg"),
+            75: ("Heavy snow", "heavy-snow.svg"),
+            77: ("Snow grains", "snow.svg"),
+            80: ("Slight showers", "showers.svg"),
+            81: ("Moderate showers", "rain.svg"),
+            82: ("Violent showers", "heavy-rain.svg"),
+            85: ("Slight snow showers", "snow.svg"),
+            86: ("Heavy snow showers", "heavy-snow.svg"),
+            95: ("Thunderstorm", "thunderstorm.svg"),
+            96: ("Thunderstorm with hail", "thunderstorm.svg"),
+            99: ("Thunderstorm with hail", "thunderstorm.svg"),
         }
         
-        return code_map.get(code, ("Unknown", "🌡️"))
+        return code_map.get(code, ("Unknown", "unknown.svg"))
