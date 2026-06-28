@@ -223,7 +223,7 @@ class WhatsOnToday(BasePlugin):
                 url = station_id
             else:
                 # Default to NSW format - users should provide full URL for other states
-                url = f"http://www.bom.gov.au/fwo/IDN60901/IDN60901.{station_id}.json"
+                url = f"https://www.bom.gov.au/fwo/IDN60901/IDN60901.{station_id}.json"
             
             # BOM requires a User-Agent header to avoid 403 errors
             headers = {
