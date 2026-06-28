@@ -32,15 +32,20 @@ class WhatsOnToday(BasePlugin):
         now = datetime.now(tz)
         today = now.date()
 
+        logger.info(f"Generating display at {now.strftime('%Y-%m-%d %H:%M:%S')}")
         events = self.fetch_todays_events(calendar_url, tz, today, time_format, now)
+        logger.info(f"Found {len(events)} event(s) for today")
 
         # Fetch weather data if no events
         weather = None
         if not events:
+            logger.info("No events today - fetching weather data")
             latitude = settings.get("weatherLatitude", "").strip()
             longitude = settings.get("weatherLongitude", "").strip()
             if latitude and longitude:
                 weather = self.fetch_weather(latitude, longitude, timezone)
+        else:
+            logger.info("Displaying events - skipping weather fetch")
 
         day_name = now.strftime("%A")
         long_date = now.strftime("%-d %B %Y")
