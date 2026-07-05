@@ -446,7 +446,7 @@
 }
 
 .wot-forecast-current-temp {
-  font-size: min(16dvw, 13dvh);
+  font-size: min(22dvw, 16dvh);
   font-weight: 900;
   line-height: 1;
   letter-spacing: -0.02em;
