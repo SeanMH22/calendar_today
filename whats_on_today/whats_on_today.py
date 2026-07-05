@@ -37,16 +37,14 @@ class WhatsOnToday(BasePlugin):
         events = self.fetch_todays_events(calendar_url, tz, today, time_format, now)
         logger.info(f"Found {len(events)} event(s) for today")
 
-        # Fetch weather data if no events
+        # Always fetch weather data (shown in bottom section, or full when no events)
         weather = None
-        if not events:
-            logger.info("No events today - fetching weather data")
-            latitude = settings.get("weatherLatitude", "").strip()
-            longitude = settings.get("weatherLongitude", "").strip()
-            if latitude and longitude:
-                weather = self.fetch_weather(latitude, longitude, timezone)
+        latitude = settings.get("weatherLatitude", "").strip()
+        longitude = settings.get("weatherLongitude", "").strip()
+        if latitude and longitude:
+            weather = self.fetch_weather(latitude, longitude, timezone)
         else:
-            logger.info("Displaying events - skipping weather fetch")
+            logger.info("No weather coordinates configured - skipping weather fetch")
 
         day_name = now.strftime("%A")
         long_date = now.strftime("%-d %B %Y")
@@ -151,8 +149,8 @@ class WhatsOnToday(BasePlugin):
         for event in events:
             event.pop("dtstart", None)
         
-        # Limit to next 3 events
-        return events[:3]
+        # Limit to next 2 events
+        return events[:2]
 
     def _is_event_finished(self, dtstart, dtend, now, tz):
         """Check if event has finished."""

@@ -9,10 +9,11 @@
   overflow: hidden;
 }
 
-/* Header: day name + long date */
+/* Header: day name + long date (top 25%) */
 .wot-header {
-  flex: 0 0 auto;
+  flex: 0 0 25%;
   padding-bottom: 1dvh;
+  overflow: hidden;
 }
 
 .wot-header h3 {
@@ -58,16 +59,22 @@
   height: 0.8dvh;
   background: #FFD700; /* Yellow */
   opacity: 1;
-  margin: 2dvh 0;
+  margin: 1dvh 0;
 }
 
-/* Events list */
+/* Events list (middle 50%) */
 .wot-events {
-  flex: 1 1 auto;
+  flex: 0 0 50%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 3dvh;
+}
+
+/* Full weather fills the remaining space when there are no more events */
+.wot-weather-full-wrap {
+  flex: 1 1 auto;
+  justify-content: center;
 }
 
 .wot-no-events {
@@ -162,22 +169,22 @@
   opacity: 1;
 }
 
-/* Blue - ALL DAY: All-day events */
+/* Pink - ALL DAY: All-day events */
 .wot-event-allday {
-  background-color: #FFFFFF;
-  color: #0000FF;
-  border-left-color: #0000FF;
+  background-color: #FFC0CB; /* Pink */
+  color: #000000;
+  border-left-color: #C71585; /* Medium violet red */
   border-left-width: 3dvw;
 }
 
 .wot-event-allday .wot-event-title {
-  color: #0000FF;
+  color: #000000;
   font-weight: 900;
 }
 
 .wot-event-allday .wot-event-time,
 .wot-event-allday .wot-note-line {
-  color: #0000FF;
+  color: #000000;
   opacity: 1;
 }
 
@@ -208,6 +215,48 @@
   padding: 3dvh 0;
   align-items: center;
   text-align: center;
+}
+
+/* Compact weather in the bottom 25% (shown alongside events) */
+.wot-weather-compact {
+  flex: 1 1 auto;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  gap: 4dvw;
+  padding: 1dvh 0;
+  overflow: hidden;
+}
+
+.wot-weather-compact .wot-weather-icon {
+  width: min(20dvw, 18dvh);
+  height: min(20dvw, 18dvh);
+  margin-bottom: 0;
+  flex: 0 0 auto;
+}
+
+.wot-weather-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3dvh;
+  min-width: 0;
+}
+
+.wot-weather-compact .wot-weather-temp {
+  font-size: min(13dvw, 13dvh);
+}
+
+.wot-weather-compact .wot-weather-description {
+  font-size: min(6dvw, 4.5dvh);
+  margin-top: 0;
+}
+
+.wot-weather-compact .wot-weather-details {
+  flex-direction: row;
+  gap: 4dvw;
+  margin-top: 0;
 }
 
 .wot-weather-icon {
