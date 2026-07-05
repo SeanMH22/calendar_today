@@ -363,3 +363,64 @@
 .wot-temp-hot .wot-weather-temp {
   color: #FF0000; /* Red */
 }
+
+/* ── Daily Forecast (Low / High) ── */
+
+.wot-weather-forecast {
+  display: flex;
+  gap: 6dvw;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.wot-forecast-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+
+.wot-forecast-label {
+  font-size: min(6dvw, 4.5dvh);
+  font-weight: 700;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.wot-forecast-temp {
+  font-size: min(20dvw, 16dvh);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+/* Temperature colour coding applied directly to each forecast value */
+.wot-forecast-temp.wot-temp-cold {
+  color: #0000FF; /* Blue */
+}
+
+.wot-forecast-temp.wot-temp-mild {
+  color: #008000; /* Green */
+}
+
+.wot-forecast-temp.wot-temp-warm {
+  color: #FF8000; /* Orange */
+}
+
+.wot-forecast-temp.wot-temp-hot {
+  color: #FF0000; /* Red */
+}
+
+/* Compact forecast (bottom section alongside events) */
+.wot-weather-compact .wot-weather-forecast {
+  gap: 4dvw;
+}
+
+.wot-weather-compact .wot-forecast-label {
+  font-size: min(4dvw, 3.5dvh);
+}
+
+.wot-weather-compact .wot-forecast-temp {
+  font-size: min(9dvw, 9dvh);
+}

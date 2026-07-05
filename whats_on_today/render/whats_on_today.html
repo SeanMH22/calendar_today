@@ -45,7 +45,18 @@
             </div>
             {% endif %}
             <div class="wot-weather-info">
-                {% if weather.temperature %}
+                {% if weather.type == 'forecast' %}
+                <div class="wot-weather-forecast">
+                    <div class="wot-forecast-item">
+                        <span class="wot-forecast-label">Low</span>
+                        <span class="wot-forecast-temp wot-{{ weather.temp_min_color }}">{{ weather.temp_min }}°</span>
+                    </div>
+                    <div class="wot-forecast-item">
+                        <span class="wot-forecast-label">High</span>
+                        <span class="wot-forecast-temp wot-{{ weather.temp_max_color }}">{{ weather.temp_max }}°</span>
+                    </div>
+                </div>
+                {% elif weather.temperature %}
                 <div class="wot-weather-temp">{{ weather.temperature }}°</div>
                 {% endif %}
                 {% if weather.description %}
@@ -72,7 +83,18 @@
                 </div>
                 {% endif %}
 
-                {% if weather.temperature %}
+                {% if weather.type == 'forecast' %}
+                <div class="wot-weather-forecast">
+                    <div class="wot-forecast-item">
+                        <span class="wot-forecast-label">Low</span>
+                        <span class="wot-forecast-temp wot-{{ weather.temp_min_color }}">{{ weather.temp_min }}°</span>
+                    </div>
+                    <div class="wot-forecast-item">
+                        <span class="wot-forecast-label">High</span>
+                        <span class="wot-forecast-temp wot-{{ weather.temp_max_color }}">{{ weather.temp_max }}°</span>
+                    </div>
+                </div>
+                {% elif weather.temperature %}
                 <div class="wot-weather-temp">{{ weather.temperature }}°</div>
                 {% endif %}
 

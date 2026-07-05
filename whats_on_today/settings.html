@@ -42,12 +42,25 @@
     </small>
 </div>
 
+<div class="form-group">
+    <label for="weatherMode" class="form-label">Weather Display Mode</label>
+    <select id="weatherMode" name="weatherMode" class="form-input">
+        <option value="current">Current observations</option>
+        <option value="forecast">Daily forecast (Low / High)</option>
+    </select>
+    <small class="form-hint">
+        Choose <strong>Current observations</strong> to show the weather right now, or
+        <strong>Daily forecast</strong> to show today's Low and High temperatures.
+    </small>
+</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         if (loadPluginSettings) {
             document.getElementById('calendarURL').value = pluginSettings.calendarURL || '';
             document.getElementById('weatherLatitude').value = pluginSettings.weatherLatitude || '';
             document.getElementById('weatherLongitude').value = pluginSettings.weatherLongitude || '';
+            document.getElementById('weatherMode').value = pluginSettings.weatherMode || 'current';
         }
     });
 </script>

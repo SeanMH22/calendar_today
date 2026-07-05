@@ -41,8 +41,12 @@ class WhatsOnToday(BasePlugin):
         weather = None
         latitude = settings.get("weatherLatitude", "").strip()
         longitude = settings.get("weatherLongitude", "").strip()
+        weather_mode = settings.get("weatherMode", "current")
         if latitude and longitude:
-            weather = self.fetch_weather(latitude, longitude, timezone)
+            if weather_mode == "forecast":
+                weather = self.fetch_daily_forecast(latitude, longitude, timezone)
+            else:
+                weather = self.fetch_weather(latitude, longitude, timezone)
         else:
             logger.info("No weather coordinates configured - skipping weather fetch")
 
@@ -293,6 +297,78 @@ class WhatsOnToday(BasePlugin):
             return None
         except (KeyError, ValueError, IndexError) as exc:
             logger.error(f"Failed to parse weather data: {exc}")
+            return None
+    
+    def fetch_daily_forecast(self, latitude, longitude, timezone):
+        """Fetch today's daily forecast (min/max temperature) from Open Meteo.
+
+        Args:
+            latitude: Location latitude (e.g., "-33.87" for Sydney)
+            longitude: Location longitude (e.g., "151.21" for Sydney)
+            timezone: Timezone string (e.g., "Australia/Sydney")
+
+        Returns:
+            Dictionary with forecast data or None if fetch fails
+        """
+        try:
+            url = "https://api.open-meteo.com/v1/forecast"
+
+            params = {
+                "latitude": latitude,
+                "longitude": longitude,
+                "daily": "temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max",
+                "timezone": timezone,
+                "forecast_days": 1
+            }
+
+            logger.info(f"Fetching daily forecast from Open Meteo for lat={latitude}, lon={longitude}")
+            response = requests.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+
+            daily = data.get("daily", {})
+            temp_max = daily.get("temperature_2m_max", [None])[0]
+            temp_min = daily.get("temperature_2m_min", [None])[0]
+            weather_code = daily.get("weather_code", [None])[0]
+            rain_chance = daily.get("precipitation_probability_max", [None])[0]
+
+            # Round temperatures to whole integers for display
+            temp_max_int = round(temp_max) if temp_max is not None else None
+            temp_min_int = round(temp_min) if temp_min is not None else None
+
+            # Get weather description and icon from WMO code
+            description, icon_filename = self._get_weather_from_code(weather_code)
+
+            # Build absolute path to icon file
+            plugin_dir = os.path.dirname(os.path.abspath(__file__))
+            icon_path = os.path.join(plugin_dir, "render", "icons", icon_filename)
+
+            # Determine temperature color class for each value (max drives the container)
+            temp_max_color = self._get_temp_color(temp_max)
+            temp_min_color = self._get_temp_color(temp_min)
+
+            logger.info(
+                f"Successfully fetched forecast: low {temp_min_int}° / high {temp_max_int}° - {description}"
+            )
+            logger.info(f"Weather icon path: {icon_path}")
+
+            return {
+                "type": "forecast",
+                "temp_min": temp_min_int,
+                "temp_max": temp_max_int,
+                "temp_min_color": temp_min_color,
+                "temp_max_color": temp_max_color,
+                "temp_color": temp_max_color,
+                "description": description,
+                "icon": icon_path,
+                "rain_chance": rain_chance,
+            }
+
+        except requests.exceptions.RequestException as exc:
+            logger.error(f"Failed to fetch forecast from Open Meteo: {exc}")
+            return None
+        except (KeyError, ValueError, IndexError) as exc:
+            logger.error(f"Failed to parse forecast data: {exc}")
             return None
     
     def _get_weather_from_code(self, code):
