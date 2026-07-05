@@ -453,6 +453,44 @@
   color: #FFFFFF;
 }
 
+/* Full forecast layout: content on the left, square "Currently" tile on the right */
+.wot-weather-forecast-full {
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 4dvw;
+  width: 100%;
+  height: 100%;
+}
+
+.wot-forecast-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2dvh;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Square tile filling up to the full section height, pinned to the right */
+.wot-weather-forecast-full .wot-forecast-current {
+  flex: 0 0 auto;
+  align-self: stretch;
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 3dvw;
+  padding: 2dvh;
+}
+
+.wot-weather-forecast-full .wot-forecast-current-label {
+  font-size: min(6dvw, 5dvh);
+}
+
+.wot-weather-forecast-full .wot-forecast-current-temp {
+  font-size: min(14dvw, 22dvh);
+}
+
 /* Tile background follows the temperature colour bands */
 .wot-bg-temp-cold {
   background-color: #0000FF; /* Blue */
