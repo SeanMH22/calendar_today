@@ -276,8 +276,8 @@ class WhatsOnToday(BasePlugin):
             plugin_dir = os.path.dirname(os.path.abspath(__file__))
             icon_path = os.path.join(plugin_dir, "render", "icons", icon_filename)
             
-            # Determine temperature color class
-            temp_color = self._get_temp_color(temperature)
+            # Determine temperature colour class
+            temp_colour = self._get_temp_colour(temperature)
             
             logger.info(f"Successfully fetched weather: {temperature}°C (current) - {description}")
             logger.info(f"Weather icon path: {icon_path}")
@@ -285,7 +285,7 @@ class WhatsOnToday(BasePlugin):
             return {
                 "type": "current",
                 "temperature": temperature,
-                "temp_color": temp_color,
+                "temp_colour": temp_colour,
                 "description": description,
                 "icon": icon_path,
                 "rain_chance": rain_chance,
@@ -316,6 +316,7 @@ class WhatsOnToday(BasePlugin):
             params = {
                 "latitude": latitude,
                 "longitude": longitude,
+                "current": "temperature_2m",
                 "daily": "temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max",
                 "timezone": timezone,
                 "forecast_days": 1
@@ -332,9 +333,14 @@ class WhatsOnToday(BasePlugin):
             weather_code = daily.get("weather_code", [None])[0]
             rain_chance = daily.get("precipitation_probability_max", [None])[0]
 
+            # Current observed temperature (for the "Currently" tile)
+            current = data.get("current", {})
+            current_temp = current.get("temperature_2m")
+
             # Round temperatures to whole integers for display
             temp_max_int = round(temp_max) if temp_max is not None else None
             temp_min_int = round(temp_min) if temp_min is not None else None
+            current_temp_int = round(current_temp) if current_temp is not None else None
 
             # Get weather description and icon from WMO code
             description, icon_filename = self._get_weather_from_code(weather_code)
@@ -343,9 +349,10 @@ class WhatsOnToday(BasePlugin):
             plugin_dir = os.path.dirname(os.path.abspath(__file__))
             icon_path = os.path.join(plugin_dir, "render", "icons", icon_filename)
 
-            # Determine temperature color class for each value (max drives the container)
-            temp_max_color = self._get_temp_color(temp_max)
-            temp_min_color = self._get_temp_color(temp_min)
+            # Determine temperature colour class for each value (max drives the container)
+            temp_max_colour = self._get_temp_colour(temp_max)
+            temp_min_colour = self._get_temp_colour(temp_min)
+            current_temp_colour = self._get_temp_colour(current_temp)
 
             logger.info(
                 f"Successfully fetched forecast: low {temp_min_int}° / high {temp_max_int}° - {description}"
@@ -356,9 +363,11 @@ class WhatsOnToday(BasePlugin):
                 "type": "forecast",
                 "temp_min": temp_min_int,
                 "temp_max": temp_max_int,
-                "temp_min_color": temp_min_color,
-                "temp_max_color": temp_max_color,
-                "temp_color": temp_max_color,
+                "current_temp": current_temp_int,
+                "temp_min_colour": temp_min_colour,
+                "temp_max_colour": temp_max_colour,
+                "current_temp_colour": current_temp_colour,
+                "temp_colour": temp_max_colour,
                 "description": description,
                 "icon": icon_path,
                 "rain_chance": rain_chance,
@@ -418,14 +427,14 @@ class WhatsOnToday(BasePlugin):
         
         return code_map.get(code, ("Unknown", "unknown.svg"))
     
-    def _get_temp_color(self, temp):
-        """Determine color class based on temperature.
+    def _get_temp_colour(self, temp):
+        """Determine colour class based on temperature.
         
         Args:
             temp: Temperature in Celsius
             
         Returns:
-            Color class name: 'temp-cold', 'temp-mild', 'temp-warm', or 'temp-hot'
+            Colour class name: 'temp-cold', 'temp-mild', 'temp-warm', or 'temp-hot'
         """
         if temp is None:
             return "temp-mild"

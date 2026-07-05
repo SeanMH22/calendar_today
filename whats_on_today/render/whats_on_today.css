@@ -31,7 +31,7 @@
   letter-spacing: -0.02em;
 }
 
-/* Weekday colors */
+/* Weekday colours */
 .wot-weekday .wot-day-name {
   color: #00008B; /* Dark blue */
 }
@@ -131,7 +131,7 @@
   white-space: nowrap;
 }
 
-/* ── Spectra 6 High Contrast Color Backgrounds ── */
+/* ── Spectra 6 High Contrast Colour Backgrounds ── */
 
 /* Red - IMMINENT: Events currently in progress (happening now) */
 .wot-event-imminent {
@@ -342,7 +342,7 @@
   display: block;
 }
 
-/* ── Temperature Color Coding ── */
+/* ── Temperature Colour Coding ── */
 
 /* Cold: < 18°C */
 .wot-temp-cold .wot-weather-temp {
@@ -369,7 +369,7 @@
 .wot-weather-forecast {
   display: flex;
   gap: 6dvw;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
 }
 
@@ -423,4 +423,62 @@
 
 .wot-weather-compact .wot-forecast-temp {
   font-size: min(9dvw, 9dvh);
+}
+
+/* "Currently" tile: white text on a temperature-coloured, rounded background */
+.wot-forecast-current {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3dvw;
+  padding: 2dvh 4dvw;
+  color: #FFFFFF;
+}
+
+.wot-forecast-current-label {
+  font-size: min(5dvw, 4dvh);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #FFFFFF;
+  opacity: 0.95;
+}
+
+.wot-forecast-current-temp {
+  font-size: min(16dvw, 13dvh);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: #FFFFFF;
+}
+
+/* Tile background follows the temperature colour bands */
+.wot-bg-temp-cold {
+  background-color: #0000FF; /* Blue */
+}
+
+.wot-bg-temp-mild {
+  background-color: #008000; /* Green */
+}
+
+.wot-bg-temp-warm {
+  background-color: #FF8000; /* Orange */
+}
+
+.wot-bg-temp-hot {
+  background-color: #FF0000; /* Red */
+}
+
+.wot-weather-compact .wot-forecast-current {
+  border-radius: 2dvw;
+  padding: 1dvh 3dvw;
+}
+
+.wot-weather-compact .wot-forecast-current-label {
+  font-size: min(3.5dvw, 3dvh);
+}
+
+.wot-weather-compact .wot-forecast-current-temp {
+  font-size: min(8dvw, 8dvh);
 }
