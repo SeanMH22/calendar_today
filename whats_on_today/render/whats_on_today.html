@@ -38,6 +38,43 @@
 
         {% if weather %}
         {# Bottom: compact weather alongside events #}
+        {% if weather.type == 'forecast' %}
+        <footer class="wot-weather wot-weather-compact wot-weather-forecast-compact wot-{{ weather.temp_colour }}">
+            <div class="wot-forecast-main-compact">
+                {% if weather.icon %}
+                <div class="wot-weather-icon">
+                    <img src="file://{{ weather.icon }}" alt="{{ weather.description }}" />
+                </div>
+                {% endif %}
+                <div class="wot-weather-info">
+                    <div class="wot-weather-forecast">
+                        <div class="wot-forecast-item">
+                            <span class="wot-forecast-label">Low</span>
+                            <span class="wot-forecast-temp wot-{{ weather.temp_min_colour }}">{{ weather.temp_min }}°</span>
+                        </div>
+                        <div class="wot-forecast-item">
+                            <span class="wot-forecast-label">High</span>
+                            <span class="wot-forecast-temp wot-{{ weather.temp_max_colour }}">{{ weather.temp_max }}°</span>
+                        </div>
+                    </div>
+                    {% if weather.description %}
+                    <div class="wot-weather-description">{{ weather.description }}</div>
+                    {% endif %}
+                    {% if weather.rain_chance %}
+                    <div class="wot-weather-details">
+                        <span class="wot-weather-detail">Rain: {{ weather.rain_chance }}%</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% if weather.current_temp %}
+            <div class="wot-forecast-current wot-bg-{{ weather.current_temp_colour }}">
+                <span class="wot-forecast-current-label">Currently</span>
+                <span class="wot-forecast-current-temp">{{ weather.current_temp }}°</span>
+            </div>
+            {% endif %}
+        </footer>
+        {% else %}
         <footer class="wot-weather wot-weather-compact wot-{{ weather.temp_colour }}">
             {% if weather.icon %}
             <div class="wot-weather-icon">
@@ -45,24 +82,7 @@
             </div>
             {% endif %}
             <div class="wot-weather-info">
-                {% if weather.type == 'forecast' %}
-                <div class="wot-weather-forecast">
-                    <div class="wot-forecast-item">
-                        <span class="wot-forecast-label">Low</span>
-                        <span class="wot-forecast-temp wot-{{ weather.temp_min_colour }}">{{ weather.temp_min }}°</span>
-                    </div>
-                    <div class="wot-forecast-item">
-                        <span class="wot-forecast-label">High</span>
-                        <span class="wot-forecast-temp wot-{{ weather.temp_max_colour }}">{{ weather.temp_max }}°</span>
-                    </div>
-                    {% if weather.current_temp %}
-                    <div class="wot-forecast-current wot-bg-{{ weather.current_temp_colour }}">
-                        <span class="wot-forecast-current-label">Currently</span>
-                        <span class="wot-forecast-current-temp">{{ weather.current_temp }}°</span>
-                    </div>
-                    {% endif %}
-                </div>
-                {% elif weather.temperature %}
+                {% if weather.temperature %}
                 <div class="wot-weather-temp">{{ weather.temperature }}°</div>
                 {% endif %}
                 {% if weather.description %}
@@ -78,6 +98,7 @@
                 </div>
             </div>
         </footer>
+        {% endif %}
         {% endif %}
     {% elif weather %}
         {# No more events today: full weather across middle & bottom #}

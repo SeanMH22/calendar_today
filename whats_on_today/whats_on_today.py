@@ -421,8 +421,8 @@ class WhatsOnToday(BasePlugin):
             85: ("Slight snow showers", "snow.svg"),
             86: ("Heavy snow showers", "heavy-snow.svg"),
             95: ("Thunderstorm", "thunderstorm.svg"),
-            96: ("Thunderstorm with hail", "thunderstorm.svg"),
-            99: ("Thunderstorm with hail", "thunderstorm.svg"),
+            96: ("Thunderstorm + hail", "thunderstorm.svg"),
+            99: ("Thunderstorm + hail", "thunderstorm.svg"),
         }
         
         return code_map.get(code, ("Unknown", "unknown.svg"))

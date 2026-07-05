@@ -491,6 +491,30 @@
   font-size: min(14dvw, 22dvh);
 }
 
+/* Compact forecast (bottom section alongside events): tile pinned right, square */
+.wot-weather-forecast-compact {
+  justify-content: space-between;
+  align-items: stretch;
+}
+
+.wot-forecast-main-compact {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4dvw;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.wot-weather-forecast-compact .wot-forecast-current {
+  flex: 0 0 auto;
+  align-self: stretch;
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 2dvw;
+  padding: 1dvh;
+}
+
 /* Tile background follows the temperature colour bands */
 .wot-bg-temp-cold {
   background-color: #0000FF; /* Blue */
