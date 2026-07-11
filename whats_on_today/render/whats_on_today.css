@@ -476,8 +476,8 @@
 /* Square tile filling up to the full section height, pinned to the right */
 .wot-weather-forecast-full .wot-forecast-current {
   flex: 0 0 auto;
-  align-self: stretch;
-  height: 100%;
+  max-height: 70dvh;
+  width: min(70dvh, 45dvw);
   aspect-ratio: 1 / 1;
   border-radius: 3dvw;
   padding: 2dvh;
@@ -508,8 +508,8 @@
 
 .wot-weather-forecast-compact .wot-forecast-current {
   flex: 0 0 auto;
-  align-self: stretch;
-  height: 100%;
+  max-height: 22dvh;
+  width: min(22dvh, 30dvw);
   aspect-ratio: 1 / 1;
   border-radius: 2dvw;
   padding: 1dvh;
