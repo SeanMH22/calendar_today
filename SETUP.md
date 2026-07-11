@@ -158,7 +158,65 @@ cat /sys/class/net/wlan0/address
 
 ---
 
-## 6. Verifying the display
+## 6. Accessing the InkyPi admin UI
+
+The InkyPi admin page is a **web server running on the Pi** — you do not need a browser
+on the Pi itself. Open it from any phone or laptop on the same network:
+
+```
+http://inkypi.local
+```
+
+or by IP address if mDNS (`.local`) does not resolve on your network. Find the IP with:
+
+```bash
+hostname -I
+```
+
+> **Avoid using Raspberry Pi Connect's screen share + Chromium on the Pi Zero 2 W.**
+> The Pi Zero 2 W has only 512 MB RAM; Chromium warns it is unsupported and the remote
+> desktop session is very CPU-intensive. Use one of the options below instead.
+
+### Option A: same-network browser (simplest)
+
+If your laptop or phone is on the same Wi-Fi as the Pi (or the travel router from
+[Section 5](#5-getting-online-without-network-admin-access)), just open
+`http://inkypi.local` in a browser. For terminal access use Raspberry Pi Connect's
+**Remote shell** (SSH) rather than Screen share — it is lightweight.
+
+### Option B: Tailscale — access from anywhere (recommended for ongoing remote admin)
+
+[Tailscale](https://tailscale.com/) creates a private encrypted network between your
+devices. No port forwarding or firewall changes are needed.
+
+1. Install on the Pi:
+
+   ```bash
+   curl -fsSL https://tailscale.com/install.sh | sh
+   sudo tailscale up
+   ```
+
+2. Install Tailscale on your laptop and/or phone from <https://tailscale.com/download>.
+3. Browse to `http://<pi-tailscale-ip>` from any of your devices, anywhere.
+
+The Tailscale IP for the Pi is shown after `sudo tailscale up`, or in the
+[Tailscale admin console](https://login.tailscale.com/admin/machines). Tailscale is
+free for personal use (up to 100 devices).
+
+### Option C: SSH tunnel (no extra software)
+
+Forward the Pi's web UI to your local machine over SSH:
+
+```bash
+ssh -L 8080:localhost:80 <username>@inkypi.local
+```
+
+Then open `http://localhost:8080` in your browser. Much lighter than screen sharing
+and requires no additional software beyond SSH.
+
+---
+
+## 8. Verifying the display
 
 - Watch the InkyPi web UI logs, or on the Pi:
 
@@ -171,7 +229,7 @@ cat /sys/class/net/wlan0/address
 
 ---
 
-## 7. Troubleshooting quick reference
+## 9. Troubleshooting quick reference
 
 | Symptom | Likely cause / fix |
 |---|---|

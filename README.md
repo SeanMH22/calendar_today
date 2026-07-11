@@ -49,8 +49,14 @@ available:
 1. **Current observations** — the temperature right now, with a condition icon,
    description, humidity and rain chance.
 2. **Daily forecast (Low / High)** — today's forecast **Low** and **High**
-   temperatures shown as whole integers, plus a square **Currently** tile showing the
-   current temperature. The tile's background follows the temperature colour band.
+   temperatures shown as whole integers, with a square **Currently** tile showing
+   the current observed temperature.
+
+   - **With events present** (bottom 25%): weather icon, Low/High and the Currently
+     tile are displayed compactly side by side. The tile is right-justified and square.
+   - **No more events today** (middle + bottom, 75%): the icon and Currently tile share
+     a top row; Low/High, the condition description and rain chance fill the full width
+     below. The tile's background colour follows the temperature band.
 
 Temperature colouring (applied to each value):
 
@@ -69,7 +75,7 @@ installation, then add the following entry to your InkyPi plugin configuration:
     "display_name": "What's On Today",
     "id": "whats_on_today",
     "class": "WhatsOnToday",
-    "version": "2.4.0"
+    "version": "2.4.5"
 }
 ```
 
