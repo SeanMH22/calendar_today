@@ -316,8 +316,8 @@ class WhatsOnToday(BasePlugin):
             params = {
                 "latitude": latitude,
                 "longitude": longitude,
-                "current": "temperature_2m",
-                "daily": "temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max",
+                "current": "temperature_2m,weather_code",
+                "daily": "temperature_2m_max,temperature_2m_min,precipitation_probability_max",
                 "timezone": timezone,
                 "forecast_days": 1
             }
@@ -330,12 +330,12 @@ class WhatsOnToday(BasePlugin):
             daily = data.get("daily", {})
             temp_max = daily.get("temperature_2m_max", [None])[0]
             temp_min = daily.get("temperature_2m_min", [None])[0]
-            weather_code = daily.get("weather_code", [None])[0]
             rain_chance = daily.get("precipitation_probability_max", [None])[0]
 
-            # Current observed temperature (for the "Currently" tile)
+            # Current observed temperature and weather code (for the "Currently" tile)
             current = data.get("current", {})
             current_temp = current.get("temperature_2m")
+            weather_code = current.get("weather_code")
 
             # Round temperatures to whole integers for display
             temp_max_int = round(temp_max) if temp_max is not None else None
