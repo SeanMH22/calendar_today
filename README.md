@@ -1,8 +1,10 @@
-# InkyPiProjects
+# Calendar Today
 
-Custom plugins for [InkyPi](https://github.com/fatihak/InkyPi) — an e-ink display project for Raspberry Pi.
+Custom plugin for [InkyPi](https://github.com/fatihak/InkyPi) — an e-ink display project for Raspberry Pi. This was inspired by RobinWts [InkyPi-Plugin-seniorDashboard_allDay](https://github.com/RobinWts/InkyPi-Plugin-seniorDashboard_allDay#inkypi-plugin-seniordashboard_allday), we have a family member who gets a bit confused so I wanted something obvious and specific to the current day only. 
 
-## Plugins
+It's very basic and not likely to have any features added by me. It's here to use as-is or make your own version.
+
+## Plugin
 
 ### `whats_on_today` — What's On Today
 
