@@ -1,4 +1,4 @@
-# Calendar Today
+# What's on Today
 
 Custom plugin for [InkyPi](https://github.com/fatihak/InkyPi) — an e-ink display project for Raspberry Pi. This was inspired by RobinWts [InkyPi-Plugin-seniorDashboard_allDay](https://github.com/RobinWts/InkyPi-Plugin-seniorDashboard_allDay#inkypi-plugin-seniordashboard_allday), we have a family member who gets a bit confused so I wanted something obvious and specific to the current day only, with no need to see past events or a long list of events and descriptions. 
 
