@@ -156,6 +156,97 @@ cat /sys/class/net/wlan0/address
 > Note: If Wi-Fi shows as connected but there is no internet, a captive portal is almost
 > always the cause — switch to Option A or B.
 
+#### Editing `wpa_supplicant.conf` directly
+
+For finer control — including multiple networks with fallback priority — edit the file
+directly on the Pi:
+
+```bash
+sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
+```
+
+The file should begin with:
+
+```
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+country=AU
+```
+
+Replace `AU` with your two-letter country code if different.
+
+**Standard WPA2-PSK network (password protected):**
+
+```
+network={
+    ssid="YourNetworkName"
+    psk="YourPassword"
+    key_mgmt=WPA-PSK
+    priority=10
+}
+```
+
+**Open network with no password (e.g. a captive portal SSID):**
+
+```
+network={
+    ssid="CareHomeWiFi"
+    key_mgmt=NONE
+    priority=5
+}
+```
+
+**Multiple networks with fallback:**
+
+Higher `priority` values are tried first. The Pi will fall back to lower-priority
+networks if the preferred one is unavailable:
+
+```
+country=GB
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+
+# Home / trusted network — preferred
+network={
+    ssid="HomeNetwork"
+    psk="HomePassword"
+    key_mgmt=WPA-PSK
+    priority=20
+}
+
+# Mobile hotspot — second choice
+network={
+    ssid="MyPhone"
+    psk="HotspotPassword"
+    key_mgmt=WPA-PSK
+    priority=10
+}
+
+# Facility open Wi-Fi — fallback (captive portal)
+network={
+    ssid="CareHomeWiFi"
+    key_mgmt=NONE
+    priority=5
+}
+```
+
+**Apply changes without rebooting:**
+
+```bash
+wpa_cli -i wlan0 reconfigure
+```
+
+Or force a full reconnect:
+
+```bash
+sudo systemctl restart dhcpcd
+```
+
+> **Captive portal caveat:** If the fallback network has a captive portal, the Pi will
+> associate with it and get an IP address, but internet will be blocked until the portal
+> is authenticated. See the notes in Section 5 about automating portal login with
+> `curl`, or use Option A (travel router) to handle the portal once via a browser.
+
 ---
 
 ## 6. Accessing the InkyPi admin UI
@@ -176,6 +267,10 @@ hostname -I
 > **Avoid using Raspberry Pi Connect's screen share + Chromium on the Pi Zero 2 W.**
 > The Pi Zero 2 W has only 512 MB RAM; Chromium warns it is unsupported and the remote
 > desktop session is very CPU-intensive. Use one of the options below instead.
+
+> **Network security note:** Raspberry Pi Connect, like Tailscale, uses outbound-only
+> encrypted tunnels to Raspberry Pi's relay servers. It does not open any inbound ports
+> on the local network and is not visible to other devices on the facility Wi-Fi.
 
 ### Option A: same-network browser (simplest)
 
@@ -202,6 +297,12 @@ devices. No port forwarding or firewall changes are needed.
 The Tailscale IP for the Pi is shown after `sudo tailscale up`, or in the
 [Tailscale admin console](https://login.tailscale.com/admin/machines). Tailscale is
 free for personal use (up to 100 devices).
+
+> **Network security note:** Tailscale operates as an outbound-only, encrypted
+> tunnelling solution. The Pi initiates the connection to Tailscale's coordination
+> servers — it does not open any ports or expose any services to the local facility
+> network. From the perspective of the local network, it is indistinguishable from
+> ordinary outbound HTTPS traffic.
 
 ### Option C: SSH tunnel (no extra software)
 
