@@ -158,6 +158,22 @@ cat /sys/class/net/wlan0/address
 
 #### Editing `wpa_supplicant.conf` directly
 
+> **Check which is actually in control first.** Modern Raspberry Pi OS (Bookworm and
+> later) manages Wi-Fi through **NetworkManager** by default, not wpa_supplicant
+> directly — in which case editing `wpa_supplicant.conf` does nothing at all, silently.
+> Check with:
+>
+> ```bash
+> systemctl status wpa_supplicant
+> ```
+>
+> Look at the `ExecStart` line. If it has **no `-c /path/to/wpa_supplicant.conf`** flag
+> (e.g. just `-u -s -O "DIR=/run/wpa_supplicant GROUP=netdev"`), it's being driven over
+> D-Bus — almost always by NetworkManager — and the file below is inert. Confirm with
+> `nmcli device status`: if `wlan0` shows `connected`/`connecting`, skip ahead to
+> [Configuring Wi-Fi via NetworkManager](#configuring-wi-fi-via-networkmanager-nmcli)
+> instead and don't bother editing this file.
+
 For finer control — including multiple networks with fallback priority — edit the file
 directly on the Pi:
 
@@ -192,7 +208,7 @@ network={
 network={
     ssid="CareHomeWiFi"
     key_mgmt=NONE
-    priority=5
+    priority=20
 }
 ```
 
@@ -202,7 +218,7 @@ Higher `priority` values are tried first. The Pi will fall back to lower-priorit
 networks if the preferred one is unavailable:
 
 ```
-country=GB
+country=AU
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
 
@@ -211,7 +227,7 @@ network={
     ssid="HomeNetwork"
     psk="HomePassword"
     key_mgmt=WPA-PSK
-    priority=20
+    priority=5
 }
 
 # Mobile hotspot — second choice
@@ -226,7 +242,7 @@ network={
 network={
     ssid="CareHomeWiFi"
     key_mgmt=NONE
-    priority=5
+    priority=20
 }
 ```
 
@@ -246,6 +262,103 @@ sudo systemctl restart dhcpcd
 > associate with it and get an IP address, but internet will be blocked until the portal
 > is authenticated. See the notes in Section 5 about automating portal login with
 > `curl`, or use Option A (travel router) to handle the portal once via a browser.
+
+#### Configuring Wi-Fi via NetworkManager (`nmcli`)
+
+If the check above showed NetworkManager is in control, configure networks through
+`nmcli` instead — edits to `wpa_supplicant.conf` won't have any effect.
+
+**Add an open network with a captive portal:**
+
+```bash
+sudo nmcli connection add type wifi con-name "CareHomeWiFi" ifname wlan0 ssid "CareHomeWiFi"
+sudo nmcli connection up "CareHomeWiFi"
+```
+
+Two gotchas found the hard way:
+
+- **Don't set `wifi-sec.key-mgmt none`** to mean "open network" — in NetworkManager
+  that setting actually means **WEP**, and it will fail waiting for a WEP key you don't
+  have. For a genuinely open network, create the profile with no security block at all
+  (as above); NetworkManager detects it's open from the scan.
+- **A stale saved profile for the same SSID can get contaminated** with leftover 802.1X
+  (enterprise auth) settings, producing a misleading `802.1X supplicant took too long to
+  authenticate` error even though the network is plain and open. If you see that error,
+  don't chase it as a signal or auth problem — delete the profile and recreate it clean:
+
+  ```bash
+  sudo nmcli connection delete "CareHomeWiFi"
+  sudo nmcli connection add type wifi con-name "CareHomeWiFi" ifname wlan0 ssid "CareHomeWiFi"
+  sudo nmcli connection up "CareHomeWiFi"
+  ```
+
+A weak or marginal signal (roughly below -80 dBm) can also cause several
+scanning → associating → disconnected retries before it lands — normal on a large
+facility network with multiple access points, not a config problem. Give it 30–60
+seconds before assuming it's failed.
+
+**Check status:**
+
+```bash
+nmcli device status
+ip addr show wlan0
+```
+
+You want `wlan0` as `connected` with a real `inet` address (not a `169.254.x.x`
+link-local address, which means association succeeded but DHCP failed).
+
+NetworkManager connections persist and auto-reconnect on boot by default
+(`autoconnect=yes`). So once this profile is created and working, **Layer-2
+association after a restart should already be automatic** — the only piece that still
+needs handling headlessly is the captive-portal login itself, covered next.
+
+#### Auto-completing a username/password captive portal login
+
+Whichever layer is managing Wi-Fi *association* (Layer 2) — wpa_supplicant directly,
+or NetworkManager as above — it will reconnect to the facility SSID on its own after a
+reboot. What neither can do is the *portal login* (Layer 3):
+the HTTP form a captive portal shows before it will route your traffic. If that form
+needs a username and password, the Pi will be associated to Wi-Fi but stuck with no
+internet until the form is submitted — normally requiring a screen and keyboard.
+
+This repo includes a small headless script, in [`captive-portal/`](captive-portal/),
+that automates that form submission — no browser, X server, or travel router required.
+It runs on a timer: checks for internet, and if blocked, fetches the portal's login
+page and POSTs your saved credentials into whatever form it finds.
+
+**One-time setup on the Pi:**
+
+```bash
+sudo apt install -y python3-requests python3-bs4
+
+sudo mkdir -p /opt/captive-portal /etc/captive-portal /var/log/captive-portal
+sudo cp captive-portal/captive_login.py /opt/captive-portal/
+sudo cp captive-portal/config.example.ini /etc/captive-portal/config.ini
+sudo nano /etc/captive-portal/config.ini   # fill in username/password
+sudo chmod 600 /etc/captive-portal/config.ini
+
+sudo cp captive-portal/captive-portal-login.service /etc/systemd/system/
+sudo cp captive-portal/captive-portal-login.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now captive-portal-login.timer
+```
+
+The timer runs 30 seconds after boot and every 5 minutes thereafter (a no-op if
+already online), so a restart at the facility no longer needs a screen and keyboard.
+
+**Getting the field names right:** the script guesses the login form's field names are
+`username` and `password`. Real portals vary. If login keeps failing, check the saved
+page in `/var/log/captive-portal/` (dumped automatically on a failed attempt) for the
+actual `<input name="...">` values, and update `username_field` / `password_field` in
+`config.ini` to match.
+
+**Check it worked:**
+
+```bash
+sudo systemctl status captive-portal-login.service
+journalctl -u captive-portal-login.service -f
+cat /run/captive-portal-status   # "ok" or "failed"
+```
 
 ---
 

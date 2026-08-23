@@ -1,0 +1,8 @@
+[Unit]
+Description=Attempt captive portal login if internet is unreachable
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/captive-portal/captive_login.py

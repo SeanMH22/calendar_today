@@ -10,7 +10,15 @@
 
     <div class="wot-divider"></div>
 
-    {% if events %}
+    {% if connection_error %}
+        <main class="wot-events wot-weather-full-wrap">
+            <div class="wot-connection-error">
+                <div class="wot-connection-icon">&#9888;</div>
+                <div class="wot-connection-message">{{ connection_message }}</div>
+                <div class="wot-connection-submessage">This will update automatically once back online.</div>
+            </div>
+        </main>
+    {% elif events %}
         {# Middle: up to two events #}
         <main class="wot-events">
             {% for event in events %}

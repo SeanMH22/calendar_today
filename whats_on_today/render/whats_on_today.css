@@ -84,6 +84,38 @@
   margin-top: 3dvh;
 }
 
+/* Shown instead of events/weather when there's no internet access */
+.wot-connection-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 2dvh;
+  width: 100%;
+  padding: 3dvh 6dvw;
+  border-radius: 2dvw;
+  background-color: #FF8000; /* Orange */
+  color: #000000;
+}
+
+.wot-connection-icon {
+  font-size: min(16dvw, 12dvh);
+  line-height: 1;
+}
+
+.wot-connection-message {
+  font-size: min(9dvw, 7dvh);
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.wot-connection-submessage {
+  font-size: min(6dvw, 4.5dvh);
+  font-weight: 600;
+  opacity: 0.85;
+}
+
 /* Individual event card */
 .wot-event {
   display: flex;

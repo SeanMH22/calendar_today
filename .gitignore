@@ -1,0 +1,6 @@
+# Captive portal credentials — never commit the real config
+captive-portal/config.ini
+
+.DS_Store
+__pycache__/
+*.pyc

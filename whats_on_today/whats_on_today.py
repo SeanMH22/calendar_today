@@ -33,27 +33,45 @@ class WhatsOnToday(BasePlugin):
         now = datetime.now(tz)
         today = now.date()
 
-        logger.info(f"Generating display at {now.strftime('%Y-%m-%d %H:%M:%S')}")
-        events = self.fetch_todays_events(calendar_url, tz, today, time_format, now)
-        logger.info(f"Found {len(events)} event(s) for today")
-
-        # Always fetch weather data (shown in bottom section, or full when no events)
-        weather = None
-        latitude = settings.get("weatherLatitude", "").strip()
-        longitude = settings.get("weatherLongitude", "").strip()
-        weather_mode = settings.get("weatherMode", "current")
-        if latitude and longitude:
-            if weather_mode == "forecast":
-                weather = self.fetch_daily_forecast(latitude, longitude, timezone)
-            else:
-                weather = self.fetch_weather(latitude, longitude, timezone)
-        else:
-            logger.info("No weather coordinates configured - skipping weather fetch")
-
         day_name = now.strftime("%A")
         long_date = now.strftime("%-d %B %Y")
         # Determine if weekend (Saturday=5, Sunday=6)
         day_type = "weekend" if now.weekday() >= 5 else "weekday"
+
+        logger.info(f"Generating display at {now.strftime('%Y-%m-%d %H:%M:%S')}")
+        try:
+            events = self.fetch_todays_events(calendar_url, tz, today, time_format, now)
+            logger.info(f"Found {len(events)} event(s) for today")
+
+            # Always fetch weather data (shown in bottom section, or full when no events)
+            weather = None
+            latitude = settings.get("weatherLatitude", "").strip()
+            longitude = settings.get("weatherLongitude", "").strip()
+            weather_mode = settings.get("weatherMode", "current")
+            if latitude and longitude:
+                if weather_mode == "forecast":
+                    weather = self.fetch_daily_forecast(latitude, longitude, timezone)
+                else:
+                    weather = self.fetch_weather(latitude, longitude, timezone)
+            else:
+                logger.info("No weather coordinates configured - skipping weather fetch")
+        except RuntimeError as exc:
+            # Almost always means the device has no internet access right now.
+            # Show a clear message instead of a stale schedule or a crash.
+            logger.error(f"Could not refresh today's information: {exc}")
+            template_params = {
+                "day_name": day_name,
+                "long_date": long_date,
+                "day_type": day_type,
+                "connection_error": True,
+                "connection_message": self._connection_error_message(),
+            }
+            image = self.render_image(
+                dimensions, "whats_on_today.html", "whats_on_today.css", template_params
+            )
+            if not image:
+                raise RuntimeError("Failed to render calendar image, please check logs.")
+            return image
 
         template_params = {
             "day_name": day_name,
@@ -63,6 +81,7 @@ class WhatsOnToday(BasePlugin):
             "weather": weather,
             "time_format": time_format,
             "plugin_settings": settings,
+            "connection_error": False,
         }
 
         image = self.render_image(
@@ -71,6 +90,21 @@ class WhatsOnToday(BasePlugin):
         if not image:
             raise RuntimeError("Failed to render calendar image, please check logs.")
         return image
+
+    def _connection_error_message(self):
+        """Pick a message based on the captive-portal login script's last status,
+        if it's installed (see ../captive-portal/). Falls back to a generic
+        message when that status file isn't present."""
+        status = None
+        try:
+            with open("/run/captive-portal-status") as f:
+                status = f.read().strip()
+        except OSError:
+            pass
+
+        if status == "failed":
+            return "Wi-Fi login needed — reconnecting automatically"
+        return "No internet connection"
 
     def fetch_todays_events(self, calendar_url, tz, today, time_format="12h", now=None):
         """Fetch and return events occurring on *today* from the given ICS URL."""
