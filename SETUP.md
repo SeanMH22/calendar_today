@@ -452,3 +452,18 @@ and requires no additional software beyond SSH.
 | No weather shown | Latitude/longitude missing, or no internet. |
 | Events missing | Check the calendar URL is a direct `.ics` feed and is publicly reachable. |
 | Can't reach `inkypi.local` | Use the Pi's IP address instead (check your router's client list). |
+
+## 10. Captive Portal WiFi Setup (care facility / networks you don't administer)
+
+Some networks (aged care facilities, hotels, etc.) require you to load a login
+page in a browser before the device gets real internet access. Since the Pi
+usually runs headless with no desktop environment, this needs a one-off
+graphical session.
+
+### Requirements
+
+- Direct-connected screen, keyboard, and mouse (temporary — not needed after setup)
+- `matchbox-window-manager` and `netsurf-gtk` installed
+
+```bash
+sudo apt install matchbox-window-manager netsurf-gtk

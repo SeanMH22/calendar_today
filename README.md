@@ -116,5 +116,4 @@ The plugin relies on libraries already used by the InkyPi calendar plugin:
 
 <img width="493" height="812" alt="image" src="https://github.com/user-attachments/assets/a19661e2-d303-42cb-a379-8f1f1bf4118b" />
 
-
 <img width="485" height="805" alt="image" src="https://github.com/user-attachments/assets/9ebcef05-06a8-4d48-bc9b-44398b21b285" />
