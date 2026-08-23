@@ -1,8 +1,10 @@
-# InkyPiProjects
+# What's on Today
 
-Custom plugins for [InkyPi](https://github.com/fatihak/InkyPi) — an e-ink display project for Raspberry Pi.
+Custom plugin for [InkyPi](https://github.com/fatihak/InkyPi) — an e-ink display project for Raspberry Pi. This was inspired by RobinWts [InkyPi-Plugin-seniorDashboard_allDay](https://github.com/RobinWts/InkyPi-Plugin-seniorDashboard_allDay#inkypi-plugin-seniordashboard_allday), we have a family member who gets a bit confused so I wanted something obvious and specific to the current day only, with no need to see past events or a long list of events and descriptions. 
 
-## Plugins
+It's very basic and not likely to have any features added by me. It's here to use as-is or make your own version.
+
+## Plugin
 
 ### `whats_on_today` — What's On Today
 
@@ -113,3 +115,6 @@ The plugin relies on libraries already used by the InkyPi calendar plugin:
 - `pytz`
 
 <img width="493" height="812" alt="image" src="https://github.com/user-attachments/assets/a19661e2-d303-42cb-a379-8f1f1bf4118b" />
+
+
+<img width="485" height="805" alt="image" src="https://github.com/user-attachments/assets/9ebcef05-06a8-4d48-bc9b-44398b21b285" />
