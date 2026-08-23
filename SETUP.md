@@ -453,12 +453,22 @@ and requires no additional software beyond SSH.
 | Events missing | Check the calendar URL is a direct `.ics` feed and is publicly reachable. |
 | Can't reach `inkypi.local` | Use the Pi's IP address instead (check your router's client list). |
 
-## 10. Captive Portal WiFi Setup (care facility / networks you don't administer)
+## 10. Captive Portal WiFi Setup — manual fallback
 
 Some networks (aged care facilities, hotels, etc.) require you to load a login
 page in a browser before the device gets real internet access. Since the Pi
 usually runs headless with no desktop environment, this needs a one-off
 graphical session.
+
+> **This is a fallback, not the primary approach.** The headless script in
+> [Section 5](#auto-completing-a-usernamepassword-captive-portal-login) handles
+> routine re-logins automatically, with no screen or keyboard needed. Reach for the
+> manual steps below only when:
+>
+> - You're setting up a new facility Wi-Fi for the first time and need to see the
+>   portal's actual login page to fill in [`captive-portal/config.ini`](captive-portal/config.example.ini) correctly (field names, any extra required fields), or
+> - The portal requires JavaScript, a CAPTCHA, or some other interactive step the
+>   headless script's plain HTTP form submission can't handle.
 
 ### Requirements
 
@@ -466,4 +476,54 @@ graphical session.
 - `matchbox-window-manager` and `netsurf-gtk` installed
 
 ```bash
-sudo apt install matchbox-window-manager netsurf-gtk
+sudo apt install -y matchbox-window-manager netsurf-gtk
+```
+
+### One-off graphical login session
+
+1. Create `~/.xinitrc` so `startx` launches a minimal window manager plus the
+   browser, full-screen, with nothing else running:
+
+   ```bash
+   cat > ~/.xinitrc <<'EOF'
+   exec matchbox-window-manager &
+   exec netsurf-gtk
+   EOF
+   ```
+
+2. With the screen, keyboard, and mouse connected, start the graphical session from
+   the console:
+
+   ```bash
+   startx
+   ```
+
+3. In NetSurf, browse to any plain HTTP address to trigger the portal redirect —
+   for example:
+
+   ```
+   http://neverssl.com
+   ```
+
+   This should redirect to the facility's login page. Enter the username and
+   password and submit the form.
+
+4. Once the portal confirms you're logged in, close NetSurf (window close button,
+   or `Ctrl+Alt+Backspace` if it's stuck) to exit back to the console — `startx`
+   will return.
+
+5. Confirm you actually have internet before disconnecting the screen:
+
+   ```bash
+   curl -sI http://neverssl.com
+   ```
+
+   A normal HTTP response (not another redirect to the portal) means you're
+   through. You can now unplug the screen, keyboard, and mouse.
+
+6. If you were here to capture the portal's form for the headless script, view
+   NetSurf's page source on the login page (or check
+   `/var/log/captive-portal/portal-*.html`, saved automatically the next time the
+   script's own attempt fails) for the real `<input name="...">` values, and update
+   `username_field` / `password_field` in `/etc/captive-portal/config.ini`
+   accordingly.
