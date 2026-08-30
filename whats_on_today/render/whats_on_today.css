@@ -135,13 +135,14 @@
   width: 100%;
   height: 100%;
   justify-content: center;
+  padding: 1dvh 0;
 }
 
 .wot-events-col {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 3dvh;
   overflow: hidden;
   min-width: 0;
@@ -149,11 +150,12 @@
 
 /* The weather column is much narrower than the full-width weather display
    these classes were tuned for — dvw/dvh are viewport-relative, not
-   column-relative, so everything needs a smaller, mostly height-driven
-   scale here to actually fit (same pattern as .wot-weather-compact below). */
+   column-relative, so everything needs its own scale here to actually fit
+   (same pattern as .wot-weather-compact below), sized up to use the
+   column's available height rather than leaving it mostly empty. */
 .wot-weather-col .wot-weather-icon {
-  width: min(20dvw, 18dvh);
-  height: min(20dvw, 18dvh);
+  width: min(25dvw, 25dvh);
+  height: min(25dvw, 25dvh);
 }
 
 .wot-weather-col .wot-forecast-top-row {
@@ -161,17 +163,18 @@
 }
 
 .wot-weather-col .wot-weather-forecast-full .wot-forecast-current {
-  width: min(20dvw, 18dvh);
-  height: min(20dvw, 18dvh);
-  padding: 0.5dvh 0.5dvw;
+  width: min(25dvw, 25dvh);
+  height: min(25dvw, 25dvh);
+  padding: 1dvh 2dvw;
+  border-radius: 1.5dvw;
 }
 
 .wot-weather-col .wot-weather-forecast-full .wot-forecast-current-label {
-  font-size: min(6dvw, 3dvh);
+  font-size: min(5dvw, 3dvh);
 }
 
 .wot-weather-col .wot-weather-forecast-full .wot-forecast-current-temp {
-  font-size: min(14dvw, 9dvh);
+  font-size: min(16dvw, 11dvh);
 }
 
 .wot-weather-col .wot-weather-forecast {
@@ -179,19 +182,19 @@
 }
 
 .wot-weather-col .wot-forecast-label {
-  font-size: min(4dvw, 3dvh);
+  font-size: min(4.5dvw, 3.5dvh);
 }
 
 .wot-weather-col .wot-forecast-temp {
-  font-size: min(14dvw, 9dvh);
+  font-size: min(16dvw, 11dvh);
 }
 
 .wot-weather-col .wot-weather-description {
-  font-size: min(6dvw, 4dvh);
+  font-size: min(6.5dvw, 4.5dvh);
 }
 
 .wot-weather-col .wot-weather-detail {
-  font-size: min(4dvw, 3dvh);
+  font-size: min(4.5dvw, 3.5dvh);
 }
 
 .wot-no-events {
