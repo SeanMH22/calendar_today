@@ -8,22 +8,38 @@ It's very basic and not likely to have any features added by me. It's here to us
 
 ### `whats_on_today` — What's On Today
 
-Displays today's schedule and weather at a glance in **landscape orientation**.
+Displays today's schedule and weather at a glance. The layout automatically follows
+your device's configured **landscape or portrait** orientation — no plugin setting
+needed, it just adapts.
 
-The display is divided into three horizontal bands:
+**In portrait**, or in landscape when only one of events/weather is available, the
+display is divided into three vertically stacked bands:
 
 - **Top (25%)** — Header: day name + long date
 - **Middle (50%)** — Today's events (up to two)
 - **Bottom (25%)** — Weather
 
-When there are **no more upcoming events** for the day, the weather expands to fill
-the middle and bottom bands (75%).
+When there are **no upcoming events** for the day, weather expands to fill the middle
+and bottom bands (75%).
+
+**In landscape, when both events and weather are available**, the layout instead
+splits into two columns below the header: weather fills a full-height column on the
+left, and today's events fill the remaining column on the right — rather than
+squeezing weather into a small strip.
+
+If the plugin can't reach the internet (calendar or weather fetch fails), an orange
+warning tile replaces the normal content instead of the display silently going stale
+— the header still shows the correct day and date, computed locally with no network
+needed.
 
 #### Header
 
 - **Day name** rendered as a large H1 heading (e.g. *Sunday*), coloured blue on
   weekdays and green at weekends
-- **Long date** subtitle in *day month year* format (e.g. *5 July 2026*)
+- **Long date** — in landscape, sits beside the day name on the same line in an
+  abbreviated format (e.g. *5 Sep 2026*) so it fits at a large, readable size; in
+  portrait, where there's less width but more height to spare, it stacks below the
+  day name in full format (e.g. *5 September 2026*)
 
 #### Events
 
@@ -54,11 +70,17 @@ available:
    temperatures shown as whole integers, with a square **Currently** tile showing
    the current observed temperature.
 
-   - **With events present** (bottom 25%): weather icon, Low/High and the Currently
-     tile are displayed compactly side by side. The tile is right-justified and square.
-   - **No more events today** (middle + bottom, 75%): the icon and Currently tile share
-     a top row; Low/High, the condition description and rain chance fill the full width
-     below. The tile's background colour follows the temperature band.
+   - **With events present, in portrait** (bottom 25%): weather icon, Low/High and
+     the Currently tile are displayed compactly side by side. The tile is
+     right-justified and square.
+   - **With events present, in landscape**: weather fills its own full-height left
+     column instead of a compact strip — icon and Currently tile on top, Low/High,
+     description and rain chance below, all sized to use the column's height. Events
+     fill the right column, starting from the top.
+   - **No upcoming events** (middle + bottom, 75%, either orientation): the icon and
+     Currently tile share a top row; Low/High, the condition description and rain
+     chance fill the full width below. The tile's background colour follows the
+     temperature band.
 
 Temperature colouring (applied to each value):
 
@@ -77,7 +99,7 @@ installation, then add the following entry to your InkyPi plugin configuration:
     "display_name": "What's On Today",
     "id": "whats_on_today",
     "class": "WhatsOnToday",
-    "version": "2.4.5"
+    "version": "2.5.0"
 }
 ```
 
