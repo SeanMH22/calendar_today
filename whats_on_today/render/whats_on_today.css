@@ -24,11 +24,29 @@
   letter-spacing: 0.05em;
 }
 
+.wot-day-date-row {
+  display: flex;
+  gap: 0.5dvh 3dvw;
+}
+
+/* Landscape has room to put the date beside the day name */
+.wot-landscape .wot-day-date-row {
+  flex-direction: row;
+  align-items: flex-end;
+}
+
+/* Portrait is too narrow for both on one line — stack them */
+.wot-portrait .wot-day-date-row {
+  flex-direction: column;
+}
+
 .wot-day-name {
-  font-size: min(22dvw, 16dvh);
+  font-size: min(16dvw, 16dvh);
   font-weight: 900;
   line-height: 1;
   letter-spacing: -0.02em;
+  white-space: nowrap;
+  margin: 0;
 }
 
 /* Weekday colours */
@@ -43,7 +61,8 @@
 .wot-long-date {
   font-size: min(7dvw, 5dvh);
   font-weight: 700;
-  margin-top: 0.5em;
+  line-height: 1;
+  margin-top: 0;
   opacity: 1;
 }
 
@@ -57,7 +76,7 @@
 .wot-divider {
   flex: 0 0 auto;
   height: 0.8dvh;
-  background: #FFD700; /* Yellow */
+  background: #FF0000; /* Red */
   opacity: 1;
   margin: 1dvh 0;
 }
