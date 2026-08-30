@@ -328,6 +328,16 @@ page and POSTs your saved credentials into whatever form it finds.
 
 **One-time setup on the Pi:**
 
+Get the code onto the Pi first — over SSH, clone the repo directly on the Pi (same
+approach as installing InkyPi itself in [Section 3](#3-install-inkypi)):
+
+```bash
+git clone https://github.com/SeanMH22/calendar_today.git
+cd calendar_today
+```
+
+Then, still on the Pi, from inside that `calendar_today` directory:
+
 ```bash
 sudo apt install -y python3-requests python3-bs4
 
