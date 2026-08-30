@@ -33,7 +33,10 @@ class WhatsOnToday(BasePlugin):
         today = now.date()
 
         day_name = now.strftime("%A")
-        long_date = now.strftime("%-d %B %Y")
+        # Landscape puts the date beside the (large) day name, so it needs the
+        # shorter "%b" form to fit at a readable size; portrait stacks them
+        # and has room for the full month name.
+        long_date = now.strftime("%-d %b %Y") if not is_portrait else now.strftime("%-d %B %Y")
         # Determine if weekend (Saturday=5, Sunday=6)
         day_type = "weekend" if now.weekday() >= 5 else "weekday"
 

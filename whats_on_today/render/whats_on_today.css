@@ -68,11 +68,13 @@
 }
 
 /* Landscape has the width to spare — make the date much bigger than portrait.
-   Sized to reliably fit a full date string beside the day name on one line;
-   truncates with an ellipsis rather than wrapping (which would blow out the
-   header's height) if a longer date string ever doesn't fit. */
+   The plugin passes an abbreviated month here (e.g. "30 Sep 2026") so this
+   can be sized well above the original; a literal 4/5-of-day-name size still
+   doesn't fit even abbreviated, so this is the largest verified size that
+   fits the worst case ("DD Mmm YYYY") without truncating. The ellipsis
+   fallback below stays as a safety net rather than the expected path. */
 .wot-landscape .wot-long-date {
-  font-size: min(7dvw, 5dvh);
+  font-size: min(8dvw, 8dvh);
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
