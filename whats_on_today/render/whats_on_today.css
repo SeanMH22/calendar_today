@@ -46,6 +46,7 @@
   line-height: 1;
   letter-spacing: -0.02em;
   white-space: nowrap;
+  flex-shrink: 0;
   margin: 0;
 }
 
@@ -64,6 +65,19 @@
   line-height: 1;
   margin-top: 0;
   opacity: 1;
+}
+
+/* Landscape has the width to spare — make the date much bigger than portrait.
+   Sized to reliably fit a full date string beside the day name on one line;
+   truncates with an ellipsis rather than wrapping (which would blow out the
+   header's height) if a longer date string ever doesn't fit. */
+.wot-landscape .wot-long-date {
+  font-size: min(7dvw, 5dvh);
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .wot-current-time {
@@ -94,6 +108,88 @@
 .wot-weather-full-wrap {
   flex: 1 1 auto;
   justify-content: center;
+}
+
+/* Landscape with both events and weather: weather gets a full left column
+   instead of being squeezed into a compact strip */
+.wot-columns {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: row;
+  gap: 4dvw;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.wot-weather-col {
+  flex: 0 0 38%;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.wot-weather-col .wot-weather {
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+}
+
+.wot-events-col {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3dvh;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* The weather column is much narrower than the full-width weather display
+   these classes were tuned for — dvw/dvh are viewport-relative, not
+   column-relative, so everything needs a smaller, mostly height-driven
+   scale here to actually fit (same pattern as .wot-weather-compact below). */
+.wot-weather-col .wot-weather-icon {
+  width: min(20dvw, 18dvh);
+  height: min(20dvw, 18dvh);
+}
+
+.wot-weather-col .wot-forecast-top-row {
+  gap: 3dvw;
+}
+
+.wot-weather-col .wot-weather-forecast-full .wot-forecast-current {
+  width: min(20dvw, 18dvh);
+  height: min(20dvw, 18dvh);
+  padding: 0.5dvh 0.5dvw;
+}
+
+.wot-weather-col .wot-weather-forecast-full .wot-forecast-current-label {
+  font-size: min(6dvw, 3dvh);
+}
+
+.wot-weather-col .wot-weather-forecast-full .wot-forecast-current-temp {
+  font-size: min(14dvw, 9dvh);
+}
+
+.wot-weather-col .wot-weather-forecast {
+  gap: 4dvw;
+}
+
+.wot-weather-col .wot-forecast-label {
+  font-size: min(4dvw, 3dvh);
+}
+
+.wot-weather-col .wot-forecast-temp {
+  font-size: min(14dvw, 9dvh);
+}
+
+.wot-weather-col .wot-weather-description {
+  font-size: min(6dvw, 4dvh);
+}
+
+.wot-weather-col .wot-weather-detail {
+  font-size: min(4dvw, 3dvh);
 }
 
 .wot-no-events {
@@ -547,7 +643,7 @@
 }
 
 .wot-weather-forecast-full .wot-forecast-current-temp {
-  font-size: min(21dvh, 28dvw);
+  font-size: min(16dvh, 28dvw);
 }
 
 /* Compact forecast (bottom section alongside events): tile pinned right, square */

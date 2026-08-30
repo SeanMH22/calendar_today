@@ -1,6 +1,101 @@
 {% extends "plugin.html" %}
 
 {% block content %}
+{% macro render_events(events) %}
+    {% for event in events %}
+    <div class="wot-event wot-event-{{ event.urgency }}">
+        <div class="wot-event-title">{{ event.summary }}</div>
+        <div class="wot-event-time">
+            {% if event.start == "All day" %}
+                All day
+            {% elif event.end %}
+                {{ event.start }} &ndash; {{ event.end }}
+            {% else %}
+                {{ event.start }}
+            {% endif %}
+        </div>
+        {% if event.notes %}
+        <div class="wot-event-notes">
+            {% for line in event.notes %}
+            <span class="wot-note-line">{{ line }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+{% endmacro %}
+
+{% macro render_weather_full(weather) %}
+    {% if weather.type == 'forecast' %}
+    <div class="wot-weather wot-weather-forecast-full wot-{{ weather.temp_colour }}">
+
+        {# Top row: icon on the left, Currently tile on the right #}
+        <div class="wot-forecast-top-row">
+            {% if weather.icon %}
+            <div class="wot-weather-icon">
+                <img src="file://{{ weather.icon }}" alt="{{ weather.description }}" />
+            </div>
+            {% endif %}
+
+            {% if weather.current_temp %}
+            <div class="wot-forecast-current wot-bg-{{ weather.current_temp_colour }}">
+                <span class="wot-forecast-current-label">Currently</span>
+                <span class="wot-forecast-current-temp">{{ weather.current_temp }}°</span>
+            </div>
+            {% endif %}
+        </div>
+
+        {# Bottom rows: Low/High, description, rain — full width #}
+        <div class="wot-weather-forecast">
+            <div class="wot-forecast-item">
+                <span class="wot-forecast-label">Low</span>
+                <span class="wot-forecast-temp wot-{{ weather.temp_min_colour }}">{{ weather.temp_min }}°</span>
+            </div>
+            <div class="wot-forecast-item">
+                <span class="wot-forecast-label">High</span>
+                <span class="wot-forecast-temp wot-{{ weather.temp_max_colour }}">{{ weather.temp_max }}°</span>
+            </div>
+        </div>
+
+        {% if weather.description %}
+        <div class="wot-weather-description">{{ weather.description }}</div>
+        {% endif %}
+
+        {% if weather.rain_chance %}
+        <div class="wot-weather-details">
+            <span class="wot-weather-detail">Rain: {{ weather.rain_chance }}%</span>
+        </div>
+        {% endif %}
+
+    </div>
+    {% else %}
+    <div class="wot-weather wot-{{ weather.temp_colour }}">
+        {% if weather.icon %}
+        <div class="wot-weather-icon">
+            <img src="file://{{ weather.icon }}" alt="{{ weather.description }}" />
+        </div>
+        {% endif %}
+
+        {% if weather.temperature %}
+        <div class="wot-weather-temp">{{ weather.temperature }}°</div>
+        {% endif %}
+
+        {% if weather.description %}
+        <div class="wot-weather-description">{{ weather.description }}</div>
+        {% endif %}
+
+        <div class="wot-weather-details">
+            {% if weather.humidity %}
+            <span class="wot-weather-detail">Humidity: {{ weather.humidity }}%</span>
+            {% endif %}
+            {% if weather.rain_chance %}
+            <span class="wot-weather-detail">Rain: {{ weather.rain_chance }}%</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+{% endmacro %}
+
 <div class="wot-wrapper {{ 'wot-portrait' if is_portrait else 'wot-landscape' }}">
     <header class="wot-header wot-{{ day_type }}">
         <h3>TODAY IS:</h3>
@@ -20,34 +115,24 @@
                 <div class="wot-connection-submessage">This will update automatically once back online.</div>
             </div>
         </main>
+    {% elif events and weather and not is_portrait %}
+        {# Landscape with both events and weather: weather gets its own column #}
+        <main class="wot-columns">
+            <div class="wot-weather-col">
+                {{ render_weather_full(weather) }}
+            </div>
+            <div class="wot-events-col">
+                {{ render_events(events) }}
+            </div>
+        </main>
     {% elif events %}
         {# Middle: up to two events #}
         <main class="wot-events">
-            {% for event in events %}
-            <div class="wot-event wot-event-{{ event.urgency }}">
-                <div class="wot-event-title">{{ event.summary }}</div>
-                <div class="wot-event-time">
-                    {% if event.start == "All day" %}
-                        All day
-                    {% elif event.end %}
-                        {{ event.start }} &ndash; {{ event.end }}
-                    {% else %}
-                        {{ event.start }}
-                    {% endif %}
-                </div>
-                {% if event.notes %}
-                <div class="wot-event-notes">
-                    {% for line in event.notes %}
-                    <span class="wot-note-line">{{ line }}</span>
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-            {% endfor %}
+            {{ render_events(events) }}
         </main>
 
         {% if weather %}
-        {# Bottom: compact weather alongside events #}
+        {# Bottom: compact weather alongside events (portrait only, now that landscape uses columns) #}
         {% if weather.type == 'forecast' %}
         <footer class="wot-weather wot-weather-compact wot-weather-forecast-compact wot-{{ weather.temp_colour }}">
             <div class="wot-forecast-main-compact">
@@ -111,76 +196,9 @@
         {% endif %}
         {% endif %}
     {% elif weather %}
-        {# No more events today: full weather across middle & bottom #}
+        {# No events today: full weather across middle & bottom #}
         <main class="wot-events wot-weather-full-wrap">
-            {% if weather.type == 'forecast' %}
-            <div class="wot-weather wot-weather-forecast-full wot-{{ weather.temp_colour }}">
-
-                {# Top row: icon on the left, Currently tile on the right #}
-                <div class="wot-forecast-top-row">
-                    {% if weather.icon %}
-                    <div class="wot-weather-icon">
-                        <img src="file://{{ weather.icon }}" alt="{{ weather.description }}" />
-                    </div>
-                    {% endif %}
-
-                    {% if weather.current_temp %}
-                    <div class="wot-forecast-current wot-bg-{{ weather.current_temp_colour }}">
-                        <span class="wot-forecast-current-label">Currently</span>
-                        <span class="wot-forecast-current-temp">{{ weather.current_temp }}°</span>
-                    </div>
-                    {% endif %}
-                </div>
-
-                {# Bottom rows: Low/High, description, rain — full width #}
-                <div class="wot-weather-forecast">
-                    <div class="wot-forecast-item">
-                        <span class="wot-forecast-label">Low</span>
-                        <span class="wot-forecast-temp wot-{{ weather.temp_min_colour }}">{{ weather.temp_min }}°</span>
-                    </div>
-                    <div class="wot-forecast-item">
-                        <span class="wot-forecast-label">High</span>
-                        <span class="wot-forecast-temp wot-{{ weather.temp_max_colour }}">{{ weather.temp_max }}°</span>
-                    </div>
-                </div>
-
-                {% if weather.description %}
-                <div class="wot-weather-description">{{ weather.description }}</div>
-                {% endif %}
-
-                {% if weather.rain_chance %}
-                <div class="wot-weather-details">
-                    <span class="wot-weather-detail">Rain: {{ weather.rain_chance }}%</span>
-                </div>
-                {% endif %}
-
-            </div>
-            {% else %}
-            <div class="wot-weather wot-{{ weather.temp_colour }}">
-                {% if weather.icon %}
-                <div class="wot-weather-icon">
-                    <img src="file://{{ weather.icon }}" alt="{{ weather.description }}" />
-                </div>
-                {% endif %}
-
-                {% if weather.temperature %}
-                <div class="wot-weather-temp">{{ weather.temperature }}°</div>
-                {% endif %}
-
-                {% if weather.description %}
-                <div class="wot-weather-description">{{ weather.description }}</div>
-                {% endif %}
-
-                <div class="wot-weather-details">
-                    {% if weather.humidity %}
-                    <span class="wot-weather-detail">Humidity: {{ weather.humidity }}%</span>
-                    {% endif %}
-                    {% if weather.rain_chance %}
-                    <span class="wot-weather-detail">Rain: {{ weather.rain_chance }}%</span>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
+            {{ render_weather_full(weather) }}
         </main>
     {% else %}
         <main class="wot-events">
