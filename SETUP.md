@@ -63,6 +63,25 @@ Pi's IP address).
 
 ## 4. Install the *What's On Today* plugin
 
+### Option A: `inkypi plugin install` (if available)
+
+If your InkyPi install has the `inkypi` CLI with plugin support — for example via
+[InkyPi-Plugin-PluginManager](https://github.com/RobinWts/InkyPi-Plugin-PluginManager),
+either from its own GUI or over SSH on the Pi:
+
+```bash
+inkypi plugin install whats_on_today https://github.com/SeanMH22/calendar_today
+```
+
+This repo's `whats_on_today/` folder already matches the structure InkyPi expects for
+a third-party plugin (a folder named after the plugin id, with `plugin-info.json`
+inside), so it installs the same way any other third-party plugin would. It handles
+copying the code into `src/plugins/` and restarting the InkyPi service for you — skip
+the manual steps below and go straight to
+[Configure it in the web UI](#configure-it-in-the-web-ui).
+
+### Option B: manual copy
+
 From your computer, copy this repository's `whats_on_today` folder into the InkyPi
 `src/plugins/` directory on the Pi:
 
