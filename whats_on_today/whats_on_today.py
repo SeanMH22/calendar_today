@@ -22,9 +22,17 @@ class WhatsOnToday(BasePlugin):
         if not calendar_url:
             raise RuntimeError("A calendar URL is required.")
 
-        # Follow the device's configured orientation rather than forcing landscape
+        # device_config.get_resolution() always returns the panel's fixed native
+        # resolution, regardless of orientation — InkyPi's display pipeline rotates
+        # whatever image the plugin renders by 90° first, then resizes it to that
+        # native resolution. So when the device is vertically mounted, we must
+        # render at the *swapped* dimensions here — that way, after InkyPi's 90°
+        # rotation, the image already exactly matches the native resolution with
+        # no distorting resize. (See display_manager.py's display_image().)
+        is_portrait = device_config.get_config("orientation") == "vertical"
         dimensions = device_config.get_resolution()
-        is_portrait = dimensions[1] > dimensions[0]
+        if is_portrait:
+            dimensions = dimensions[::-1]
 
         timezone = device_config.get_config("timezone", default="Australia/Sydney")
         time_format = device_config.get_config("time_format", default="12h")
