@@ -1,4 +1,5 @@
 import logging
+import time
 import requests
 import icalendar
 import recurring_ical_events
@@ -115,8 +116,7 @@ class WhatsOnToday(BasePlugin):
             calendar_url = calendar_url.replace("webcal://", "https://")
 
         try:
-            response = requests.get(calendar_url, timeout=30)
-            response.raise_for_status()
+            response = self._get_with_retry(calendar_url, params=None, timeout=30)
             cal = icalendar.Calendar.from_ical(response.text)
         except Exception as exc:
             raise RuntimeError(f"Failed to fetch calendar: {exc}") from exc
@@ -252,6 +252,22 @@ class WhatsOnToday(BasePlugin):
         except Exception:
             return []
 
+    def _get_with_retry(self, url, params, timeout=10, retries=2, delay=3):
+        """GET with a couple of short retries, so a single transient network
+        blip doesn't silently drop weather for a whole refresh cycle."""
+        last_exc = None
+        for attempt in range(1, retries + 2):
+            try:
+                response = requests.get(url, params=params, timeout=timeout)
+                response.raise_for_status()
+                return response
+            except requests.exceptions.RequestException as exc:
+                last_exc = exc
+                if attempt <= retries:
+                    logger.warning(f"Request to {url} failed (attempt {attempt}), retrying: {exc}")
+                    time.sleep(delay)
+        raise last_exc
+
     def fetch_weather(self, latitude, longitude, timezone):
         """Fetch weather forecast from Open Meteo API.
         
@@ -277,8 +293,7 @@ class WhatsOnToday(BasePlugin):
             }
             
             logger.info(f"Fetching weather from Open Meteo for lat={latitude}, lon={longitude}")
-            response = requests.get(url, params=params, timeout=10)
-            response.raise_for_status()
+            response = self._get_with_retry(url, params)
             data = response.json()
             
             # Extract current observations (actual measured data)
@@ -357,8 +372,7 @@ class WhatsOnToday(BasePlugin):
             }
 
             logger.info(f"Fetching daily forecast from Open Meteo for lat={latitude}, lon={longitude}")
-            response = requests.get(url, params=params, timeout=10)
-            response.raise_for_status()
+            response = self._get_with_retry(url, params)
             data = response.json()
 
             daily = data.get("daily", {})
