@@ -21,11 +21,9 @@ class WhatsOnToday(BasePlugin):
         if not calendar_url:
             raise RuntimeError("A calendar URL is required.")
 
-        # Always use landscape dimensions
+        # Follow the device's configured orientation rather than forcing landscape
         dimensions = device_config.get_resolution()
-        if device_config.get_config("orientation") == "vertical":
-            # Swap to landscape
-            dimensions = dimensions[::-1]
+        is_portrait = dimensions[1] > dimensions[0]
 
         timezone = device_config.get_config("timezone", default="Australia/Sydney")
         time_format = device_config.get_config("time_format", default="12h")
@@ -63,6 +61,7 @@ class WhatsOnToday(BasePlugin):
                 "day_name": day_name,
                 "long_date": long_date,
                 "day_type": day_type,
+                "is_portrait": is_portrait,
                 "connection_error": True,
                 "connection_message": self._connection_error_message(),
             }
@@ -77,6 +76,7 @@ class WhatsOnToday(BasePlugin):
             "day_name": day_name,
             "long_date": long_date,
             "day_type": day_type,
+            "is_portrait": is_portrait,
             "events": events,
             "weather": weather,
             "time_format": time_format,

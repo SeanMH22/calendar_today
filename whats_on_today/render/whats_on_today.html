@@ -1,7 +1,7 @@
 {% extends "plugin.html" %}
 
 {% block content %}
-<div class="wot-wrapper">
+<div class="wot-wrapper {{ 'wot-portrait' if is_portrait else 'wot-landscape' }}">
     <header class="wot-header wot-{{ day_type }}">
         <h3>TODAY IS:</h3>
         <h1 class="wot-day-name">{{ day_name }}</h1>

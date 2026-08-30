@@ -116,6 +116,15 @@
   opacity: 0.85;
 }
 
+/* Portrait canvases are much narrower — give wrapped text more breathing room */
+.wot-portrait .wot-connection-error {
+  padding: 3dvh 4dvw;
+}
+
+.wot-portrait .wot-connection-message {
+  font-size: min(8dvw, 6dvh);
+}
+
 /* Individual event card */
 .wot-event {
   display: flex;
