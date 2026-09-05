@@ -381,6 +381,14 @@ page in `/var/log/captive-portal/` (dumped automatically on a failed attempt) fo
 actual `<input name="...">` values, and update `username_field` / `password_field` in
 `config.ini` to match.
 
+**If the portal page doesn't reliably appear:** by default the script finds the login
+page by following whatever redirect the `generate_204` connectivity probe returns. Some
+routers don't intercept/redirect that probe consistently — the login page loads fine
+when you browse to it manually, but the script's redirect-following comes back empty.
+If that happens, set `portal_url` in `config.ini` to the portal's own hostname or IP
+(the same address you'd type into a browser manually) so the script hits it directly
+instead of relying on the redirect.
+
 **Check it worked:**
 
 ```bash

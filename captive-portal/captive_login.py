@@ -42,9 +42,16 @@ def has_internet(session):
         return False
 
 
-def fetch_portal_page(session):
-    """Follow whatever redirect (or hijacked response) the probe URL returns
-    to land on the actual portal login page."""
+def fetch_portal_page(session, portal_url=None):
+    """Land on the actual portal login page.
+
+    Some routers don't reliably intercept/redirect the generate_204 probe
+    (it just times out or returns the real Google response), even though
+    navigating straight to the portal's own hostname always works. If
+    portal_url is configured, hit it directly instead of relying on the
+    probe redirect."""
+    if portal_url:
+        return session.get(portal_url, timeout=10, allow_redirects=True)
     return session.get(PROBE_URL, timeout=10, allow_redirects=True)
 
 
@@ -103,6 +110,7 @@ def main():
     cfg = config["captive_portal"]
     username = cfg.get("username", "")
     password = cfg.get("password", "")
+    portal_url = cfg.get("portal_url", "")
     username_field = cfg.get("username_field", "username")
     password_field = cfg.get("password_field", "password")
     debug_dir = cfg.get("debug_dir", "/var/log/captive-portal")
@@ -120,7 +128,7 @@ def main():
     logger.info("No internet detected, attempting captive portal login")
     for attempt in range(1, retries + 1):
         try:
-            page = fetch_portal_page(session)
+            page = fetch_portal_page(session, portal_url)
             submit_login(session, page, username, password, username_field, password_field, debug_dir)
             time.sleep(2)
             if has_internet(session):
