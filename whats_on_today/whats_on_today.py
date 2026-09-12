@@ -1,4 +1,5 @@
 import logging
+import subprocess
 import time
 import requests
 import icalendar
@@ -9,6 +10,29 @@ from datetime import datetime, date, timedelta
 from plugins.base_plugin.base_plugin import BasePlugin
 
 logger = logging.getLogger(__name__)
+
+# Device-config keys used to persist the last successfully fetched calendar
+# (so a later refresh that can't reach the internet can still show a real
+# schedule instead of an error screen) and the current offline streak.
+CACHE_KEY = "whats_on_today_cache"
+OFFLINE_KEY = "whats_on_today_offline"
+
+# How long a *network-level* failure (timeout/connection refused/DNS) has to
+# persist before we try a self-recovery reboot. Generous enough to ride out
+# a few refresh cycles first — a reboot is a last resort, not the first move.
+REBOOT_AFTER_OFFLINE_MINUTES = 30
+
+
+class CalendarNetworkError(Exception):
+    """The calendar server couldn't be reached at all (timeout, connection
+    refused, DNS failure) — the kind of failure a Wi-Fi reconnect/reboot
+    might actually fix."""
+
+
+class CalendarDataError(Exception):
+    """The calendar server responded, but the content wasn't a parseable
+    calendar (e.g. a captive-portal page instead of the real feed, or
+    malformed ICS). A reboot can't fix that, only the far end can."""
 
 
 class WhatsOnToday(BasePlugin):
@@ -49,40 +73,67 @@ class WhatsOnToday(BasePlugin):
         day_type = "weekend" if now.weekday() >= 5 else "weekday"
 
         logger.info(f"Generating display at {now.strftime('%Y-%m-%d %H:%M:%S')}")
+
+        cache = device_config.get_config(CACHE_KEY, default=None)
+        is_stale = False
+        stale_message = None
+        events = []
+        weather = None
+
         try:
-            events = self.fetch_todays_events(calendar_url, tz, today, time_format, now)
+            ics_text = self._fetch_calendar_text(calendar_url)
+            events = self._parse_events_for_today(ics_text, tz, today, time_format, now)
             logger.info(f"Found {len(events)} event(s) for today")
 
-            # Always fetch weather data (shown in bottom section, or full when no events)
-            weather = None
-            latitude = settings.get("weatherLatitude", "").strip()
-            longitude = settings.get("weatherLongitude", "").strip()
-            weather_mode = settings.get("weatherMode", "current")
-            if latitude and longitude:
-                if weather_mode == "forecast":
-                    weather = self.fetch_daily_forecast(latitude, longitude, timezone)
-                else:
-                    weather = self.fetch_weather(latitude, longitude, timezone)
-            else:
-                logger.info("No weather coordinates configured - skipping weather fetch")
-        except RuntimeError as exc:
-            # Almost always means the device has no internet access right now.
-            # Show a clear message instead of a stale schedule or a crash.
-            logger.error(f"Could not refresh today's information: {exc}")
-            template_params = {
-                "day_name": day_name,
-                "long_date": long_date,
-                "day_type": day_type,
-                "is_portrait": is_portrait,
-                "connection_error": True,
-                "connection_message": self._connection_error_message(),
-            }
-            image = self.render_image(
-                dimensions, "whats_on_today.html", "whats_on_today.css", template_params
+            weather = self._fetch_weather_for_settings(settings, timezone)
+            if weather is None and settings.get("weatherLatitude", "").strip() and cache:
+                # Weather API had its own blip even though the calendar came
+                # through fine — fall back to the last good reading rather
+                # than just dropping the weather section.
+                weather = cache.get("weather")
+
+            # Success — refresh the cache and clear any offline streak.
+            device_config.update_value(CACHE_KEY, {
+                "ics_text": ics_text,
+                "fetched_at": now.isoformat(),
+                "weather": weather,
+            })
+            device_config.update_value(
+                OFFLINE_KEY, {"since": None, "stale_count": 0, "rebooted_for": None}, write=True
             )
-            if not image:
-                raise RuntimeError("Failed to render calendar image, please check logs.")
-            return image
+
+        except (CalendarNetworkError, CalendarDataError) as exc:
+            logger.error(f"Could not refresh today's information: {exc}")
+            self._record_offline_attempt(device_config, now, is_network_error=isinstance(exc, CalendarNetworkError))
+
+            if cache and cache.get("ics_text"):
+                try:
+                    events = self._parse_events_for_today(cache["ics_text"], tz, today, time_format, now)
+                    weather = cache.get("weather")
+                    is_stale = True
+                    fetched_at = datetime.fromisoformat(cache["fetched_at"]).astimezone(tz)
+                    stale_message = f"Showing saved info from {self._format_time(fetched_at, time_format)}"
+                except Exception as cache_exc:
+                    logger.warning(f"Cached calendar data unusable, falling back to error screen: {cache_exc}")
+                    cache = None
+
+            if not cache or not cache.get("ics_text"):
+                # No usable cache yet (e.g. first run with no internet) —
+                # this is the only case where we show the plain error tile.
+                template_params = {
+                    "day_name": day_name,
+                    "long_date": long_date,
+                    "day_type": day_type,
+                    "is_portrait": is_portrait,
+                    "connection_error": True,
+                    "connection_message": self._connection_error_message(),
+                }
+                image = self.render_image(
+                    dimensions, "whats_on_today.html", "whats_on_today.css", template_params
+                )
+                if not image:
+                    raise RuntimeError("Failed to render calendar image, please check logs.")
+                return image
 
         template_params = {
             "day_name": day_name,
@@ -94,6 +145,8 @@ class WhatsOnToday(BasePlugin):
             "time_format": time_format,
             "plugin_settings": settings,
             "connection_error": False,
+            "is_stale": is_stale,
+            "stale_message": stale_message,
         }
 
         image = self.render_image(
@@ -102,6 +155,54 @@ class WhatsOnToday(BasePlugin):
         if not image:
             raise RuntimeError("Failed to render calendar image, please check logs.")
         return image
+
+    def _fetch_weather_for_settings(self, settings, timezone):
+        latitude = settings.get("weatherLatitude", "").strip()
+        longitude = settings.get("weatherLongitude", "").strip()
+        weather_mode = settings.get("weatherMode", "current")
+        if not (latitude and longitude):
+            logger.info("No weather coordinates configured - skipping weather fetch")
+            return None
+        if weather_mode == "forecast":
+            return self.fetch_daily_forecast(latitude, longitude, timezone)
+        return self.fetch_weather(latitude, longitude, timezone)
+
+    def _record_offline_attempt(self, device_config, now, is_network_error):
+        """Track how long we've been failing to fetch fresh data and, once a
+        genuine network failure has persisted past the threshold, trigger a
+        one-shot recovery reboot. Never reboots for a merely-unparseable
+        response (e.g. a server-side error) — that's not something a reboot
+        can fix."""
+        offline = device_config.get_config(OFFLINE_KEY, default={}) or {}
+        offline_since = offline.get("since") or now.isoformat()
+        stale_count = offline.get("stale_count", 0) + 1
+        rebooted_for = offline.get("rebooted_for")
+
+        should_reboot = False
+        if is_network_error:
+            minutes_offline = (now - datetime.fromisoformat(offline_since)).total_seconds() / 60
+            should_reboot = minutes_offline >= REBOOT_AFTER_OFFLINE_MINUTES and rebooted_for != offline_since
+            if should_reboot:
+                logger.error(f"No internet for {minutes_offline:.0f} min — rebooting to try to recover Wi-Fi")
+                rebooted_for = offline_since
+
+        device_config.update_value(
+            OFFLINE_KEY,
+            {"since": offline_since, "stale_count": stale_count, "rebooted_for": rebooted_for},
+            write=True,
+        )
+
+        if should_reboot:
+            self._attempt_reboot()
+
+    def _attempt_reboot(self):
+        """Best-effort recovery reboot. Never let a failure here take down
+        image generation — worst case, no reboot happens and we just keep
+        showing the cached dashboard until the next attempt."""
+        try:
+            subprocess.run(["sudo", "reboot"], check=False, timeout=10)
+        except Exception as exc:
+            logger.error(f"Could not trigger recovery reboot: {exc}")
 
     def _connection_error_message(self):
         """Pick a message based on the captive-portal login script's last status,
@@ -118,24 +219,40 @@ class WhatsOnToday(BasePlugin):
             return "Wi-Fi login needed — reconnecting automatically"
         return "No internet connection"
 
-    def fetch_todays_events(self, calendar_url, tz, today, time_format="12h", now=None):
-        """Fetch and return events occurring on *today* from the given ICS URL."""
-        if now is None:
-            now = datetime.now(tz)
+    def _fetch_calendar_text(self, calendar_url):
+        """Fetch the raw ICS text for *calendar_url*. Raises CalendarNetworkError
+        if the server can't be reached at all (timeout/connection refused/DNS) —
+        the cache-fallback and reboot logic in generate_image() only apply to
+        this class of failure."""
         # Support webcal:// scheme
         if calendar_url.startswith("webcal://"):
             calendar_url = calendar_url.replace("webcal://", "https://")
 
         try:
             response = self._get_with_retry(calendar_url, params=None, timeout=30)
-            cal = icalendar.Calendar.from_ical(response.text)
+            return response.text
+        except requests.exceptions.RequestException as exc:
+            raise CalendarNetworkError(f"Could not reach calendar: {exc}") from exc
+
+    def _parse_events_for_today(self, ics_text, tz, today, time_format, now):
+        """Parse ICS text and return up to 2 events relevant to *today*. Used
+        both for freshly fetched text and for cached text on a later refresh —
+        recomputing against the live *today*/*now* either way, so a cached
+        feed still renders correctly on a different day. Raises
+        CalendarDataError if the content isn't a parseable calendar (e.g. a
+        captive-portal page instead of the real feed)."""
+        try:
+            cal = icalendar.Calendar.from_ical(ics_text)
         except Exception as exc:
-            raise RuntimeError(f"Failed to fetch calendar: {exc}") from exc
+            raise CalendarDataError(f"Could not parse calendar: {exc}") from exc
 
         start_of_day = datetime(today.year, today.month, today.day, 0, 0, 0)
         end_of_day = start_of_day + timedelta(days=1)
 
-        raw_events = recurring_ical_events.of(cal).between(start_of_day, end_of_day)
+        try:
+            raw_events = recurring_ical_events.of(cal).between(start_of_day, end_of_day)
+        except Exception as exc:
+            raise CalendarDataError(f"Could not expand recurring events: {exc}") from exc
 
         events = []
         for event in raw_events:

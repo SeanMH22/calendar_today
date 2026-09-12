@@ -205,5 +205,9 @@
             <p class="wot-no-events">No events today.</p>
         </main>
     {% endif %}
+
+    {% if is_stale and stale_message %}
+    <div class="wot-stale-indicator">{{ stale_message }}</div>
+    {% endif %}
 </div>
 {% endblock %}
