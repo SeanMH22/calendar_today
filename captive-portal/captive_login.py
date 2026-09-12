@@ -9,6 +9,7 @@ captive-portal-login.timer on boot and periodically thereafter. See
 import configparser
 import logging
 import os
+import re
 import sys
 import time
 from urllib.parse import urljoin
@@ -19,6 +20,12 @@ from bs4 import BeautifulSoup
 CONFIG_PATH = os.environ.get("CAPTIVE_PORTAL_CONFIG", "/etc/captive-portal/config.ini")
 STATUS_PATH = "/run/captive-portal-status"
 PROBE_URL = "http://connectivitycheck.gstatic.com/generate_204"
+
+# Some portals (e.g. FortiGate's fgtauth flow) don't serve the login form
+# directly — they return a stub page that JS-redirects to the real form.
+# requests/BeautifulSoup can't execute JS, so follow this ourselves.
+JS_REDIRECT_RE = re.compile(r"window\.location\s*=\s*[\"']([^\"']+)[\"']")
+MAX_JS_REDIRECTS = 3
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("captive-portal-login")
@@ -50,9 +57,18 @@ def fetch_portal_page(session, portal_url=None):
     navigating straight to the portal's own hostname always works. If
     portal_url is configured, hit it directly instead of relying on the
     probe redirect."""
-    if portal_url:
-        return session.get(portal_url, timeout=10, allow_redirects=True)
-    return session.get(PROBE_URL, timeout=10, allow_redirects=True)
+    url = portal_url or PROBE_URL
+    resp = session.get(url, timeout=10, allow_redirects=True)
+
+    for _ in range(MAX_JS_REDIRECTS):
+        match = JS_REDIRECT_RE.search(resp.text)
+        if not match:
+            break
+        redirect_url = urljoin(resp.url, match.group(1))
+        logger.info(f"Following JavaScript redirect to {redirect_url}")
+        resp = session.get(redirect_url, timeout=10, allow_redirects=True)
+
+    return resp
 
 
 def save_debug_html(debug_dir, html):
