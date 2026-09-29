@@ -665,6 +665,81 @@
   font-size: min(16dvh, 28dvw);
 }
 
+/* Landscape "no events" full weather display: split into two columns
+   instead of stacking icon/tile/high-low/description/rain vertically — the
+   stacked layout doesn't fit the available height in landscape and gets
+   clipped top and bottom. Column 1 is the "Currently" tile + rain%,
+   column 2 is high/low, then the icon, then the description. */
+.wot-landscape .wot-weather-full-wrap .wot-weather-forecast-full {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  grid-template-areas:
+    "tile highlow"
+    "tile icon"
+    "rain desc";
+  align-items: center;
+  justify-items: center;
+  column-gap: 4dvw;
+  row-gap: 1dvh;
+  width: 100%;
+  height: 100%;
+}
+
+/* Unwrap the icon+tile pairing used by the portrait/sidebar layouts so the
+   icon and tile can be placed into their own grid areas independently. */
+.wot-landscape .wot-weather-full-wrap .wot-forecast-top-row {
+  display: contents;
+}
+
+.wot-landscape .wot-weather-full-wrap .wot-forecast-current {
+  grid-area: tile;
+}
+
+.wot-landscape .wot-weather-full-wrap .wot-weather-forecast {
+  grid-area: highlow;
+}
+
+.wot-landscape .wot-weather-full-wrap .wot-weather-icon {
+  grid-area: icon;
+  width: min(26dvh, 28dvw);
+  height: min(26dvh, 28dvw);
+}
+
+.wot-landscape .wot-weather-full-wrap .wot-weather-description {
+  grid-area: desc;
+  font-size: min(5.5dvh, 6dvw);
+}
+
+.wot-landscape .wot-weather-full-wrap .wot-weather-details {
+  grid-area: rain;
+}
+
+.wot-landscape .wot-weather-full-wrap .wot-forecast-current {
+  width: min(26dvh, 28dvw);
+  height: min(26dvh, 28dvw);
+}
+
+.wot-landscape .wot-weather-full-wrap .wot-forecast-current-label {
+  font-size: min(3.5dvh, 4dvw);
+}
+
+.wot-landscape .wot-weather-full-wrap .wot-forecast-current-temp {
+  font-size: min(12dvh, 14dvw);
+}
+
+.wot-landscape .wot-weather-full-wrap .wot-forecast-temp {
+  font-size: min(12dvh, 13dvw);
+}
+
+.wot-landscape .wot-weather-full-wrap .wot-forecast-label {
+  font-size: min(3.5dvh, 4dvw);
+}
+
+.wot-landscape .wot-weather-full-wrap .wot-weather-detail {
+  font-size: min(4dvh, 4.5dvw);
+}
+
 /* Compact forecast (bottom section alongside events): tile pinned right, square */
 .wot-weather-forecast-compact {
   justify-content: space-between;
