@@ -61,8 +61,10 @@ Today's events are read from any iCal / `.ics` feed, with intelligent filtering:
 #### Weather
 
 Weather is fetched from the free [Open-Meteo](https://open-meteo.com/) API (no API
-key required) whenever latitude and longitude are configured. Two display modes are
-available:
+key required) whenever latitude and longitude are configured. The condition icon
+automatically switches to night artwork between dusk and dawn (using Open-Meteo's
+sunrise/sunset-derived day/night flag), for the conditions that have a distinct
+night icon. Two display modes are available:
 
 1. **Current observations** — the temperature right now, with a condition icon,
    description, humidity and rain chance.
@@ -77,10 +79,18 @@ available:
      column instead of a compact strip — icon and Currently tile on top, Low/High,
      description and rain chance below, all sized to use the column's height. Events
      fill the right column, starting from the top.
-   - **No upcoming events** (middle + bottom, 75%, either orientation): the icon and
+   - **No upcoming events, in portrait** (middle + bottom, 75%): the icon and
      Currently tile share a top row; Low/High, the condition description and rain
      chance fill the full width below. The tile's background colour follows the
      temperature band.
+   - **No upcoming events, in landscape** (middle + bottom, 75%): rather than
+     stacking every element, the space splits into two columns so nothing gets
+     clipped — a large Currently tile and the rain chance sit centred in the left
+     column, while Low/High, the icon, and the condition description stack in the
+     right column.
+
+   Wherever rain chance is shown, a small raindrop icon appears in front of the
+   percentage.
 
 Temperature colouring (applied to each value):
 
