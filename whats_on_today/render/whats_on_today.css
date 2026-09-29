@@ -517,6 +517,21 @@
   display: block;
 }
 
+/* Raindrop icon in front of the rain% detail — sized off the surrounding
+   font-size (1em) so it scales automatically in every context (compact
+   footer, sidebar column, full-width forecast) without its own tuning. */
+.wot-rain-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+}
+
+.wot-rain-icon {
+  width: 1em;
+  height: 1em;
+  flex: 0 0 auto;
+}
+
 /* ── Temperature Colour Coding ── */
 
 /* Cold: < 18°C */
@@ -716,16 +731,16 @@
 }
 
 .wot-landscape .wot-weather-full-wrap .wot-forecast-current {
-  width: min(26dvh, 28dvw);
-  height: min(26dvh, 28dvw);
+  width: min(38dvh, 40dvw);
+  height: min(38dvh, 40dvw);
 }
 
 .wot-landscape .wot-weather-full-wrap .wot-forecast-current-label {
-  font-size: min(3.5dvh, 4dvw);
+  font-size: min(4.5dvh, 5dvw);
 }
 
 .wot-landscape .wot-weather-full-wrap .wot-forecast-current-temp {
-  font-size: min(12dvh, 14dvw);
+  font-size: min(18dvh, 20dvw);
 }
 
 .wot-landscape .wot-weather-full-wrap .wot-forecast-temp {
@@ -737,7 +752,7 @@
 }
 
 .wot-landscape .wot-weather-full-wrap .wot-weather-detail {
-  font-size: min(4dvh, 4.5dvw);
+  font-size: min(6.5dvh, 7dvw);
 }
 
 /* Compact forecast (bottom section alongside events): tile pinned right, square */

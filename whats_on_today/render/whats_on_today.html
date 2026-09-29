@@ -63,7 +63,10 @@
 
         {% if weather.rain_chance %}
         <div class="wot-weather-details">
-            <span class="wot-weather-detail">Rain: {{ weather.rain_chance }}%</span>
+            <span class="wot-weather-detail wot-rain-detail">
+                {% if weather.rain_icon %}<img class="wot-rain-icon" src="file://{{ weather.rain_icon }}" alt="" />{% endif %}
+                Rain: {{ weather.rain_chance }}%
+            </span>
         </div>
         {% endif %}
 
@@ -89,7 +92,10 @@
             <span class="wot-weather-detail">Humidity: {{ weather.humidity }}%</span>
             {% endif %}
             {% if weather.rain_chance %}
-            <span class="wot-weather-detail">Rain: {{ weather.rain_chance }}%</span>
+            <span class="wot-weather-detail wot-rain-detail">
+                {% if weather.rain_icon %}<img class="wot-rain-icon" src="file://{{ weather.rain_icon }}" alt="" />{% endif %}
+                Rain: {{ weather.rain_chance }}%
+            </span>
             {% endif %}
         </div>
     </div>
@@ -157,7 +163,10 @@
                     {% endif %}
                     {% if weather.rain_chance %}
                     <div class="wot-weather-details">
-                        <span class="wot-weather-detail">Rain: {{ weather.rain_chance }}%</span>
+                        <span class="wot-weather-detail wot-rain-detail">
+                {% if weather.rain_icon %}<img class="wot-rain-icon" src="file://{{ weather.rain_icon }}" alt="" />{% endif %}
+                Rain: {{ weather.rain_chance }}%
+            </span>
                     </div>
                     {% endif %}
                 </div>
@@ -188,7 +197,10 @@
                     <span class="wot-weather-detail">Humidity: {{ weather.humidity }}%</span>
                     {% endif %}
                     {% if weather.rain_chance %}
-                    <span class="wot-weather-detail">Rain: {{ weather.rain_chance }}%</span>
+                    <span class="wot-weather-detail wot-rain-detail">
+                {% if weather.rain_icon %}<img class="wot-rain-icon" src="file://{{ weather.rain_icon }}" alt="" />{% endif %}
+                Rain: {{ weather.rain_chance }}%
+            </span>
                     {% endif %}
                 </div>
             </div>

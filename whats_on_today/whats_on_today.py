@@ -22,6 +22,19 @@ OFFLINE_KEY = "whats_on_today_offline"
 # a few refresh cycles first — a reboot is a last resort, not the first move.
 REBOOT_AFTER_OFFLINE_MINUTES = 30
 
+# Day-icon -> night-icon swaps for the conditions that have distinct night
+# artwork. Anything not listed here (cloudy, rain, snow, thunderstorm, etc.)
+# looks the same after dark, so it just keeps its day icon.
+NIGHT_ICON_MAP = {
+    "clear-day.svg": "clear-night.svg",
+    "mostly-clear-day.svg": "mostly-clear-night.svg",
+    "partly-cloudy-day.svg": "partly-cloudy-night.svg",
+    "fog.svg": "fog-night.svg",
+    "heavy-rain.svg": "heavy-rain-night.svg",
+    "showers.svg": "showers-night.svg",
+    "windy.svg": "windy-night.svg",
+}
+
 
 class CalendarNetworkError(Exception):
     """The calendar server couldn't be reached at all (timeout, connection
@@ -414,7 +427,7 @@ class WhatsOnToday(BasePlugin):
             params = {
                 "latitude": latitude,
                 "longitude": longitude,
-                "current": "temperature_2m,relative_humidity_2m,weather_code",
+                "current": "temperature_2m,relative_humidity_2m,weather_code,is_day",
                 "hourly": "precipitation_probability",
                 "timezone": timezone,
                 "forecast_days": 1
@@ -429,6 +442,7 @@ class WhatsOnToday(BasePlugin):
             temperature = current.get("temperature_2m")
             humidity = current.get("relative_humidity_2m")
             weather_code = current.get("weather_code")
+            is_day = current.get("is_day", 1) == 1
             
             # Get rain probability from hourly forecast (current hour)
             hourly = data.get("hourly", {})
@@ -447,18 +461,19 @@ class WhatsOnToday(BasePlugin):
                 logger.warning(f"Could not get rain probability for {current_hour_str}")
             
             # Get weather description and icon from WMO code
-            description, icon_filename = self._get_weather_from_code(weather_code)
-            
+            description, icon_filename = self._get_weather_from_code(weather_code, is_day)
+
             # Build absolute path to icon file
             plugin_dir = os.path.dirname(os.path.abspath(__file__))
             icon_path = os.path.join(plugin_dir, "render", "icons", icon_filename)
-            
+            rain_icon_path = os.path.join(plugin_dir, "render", "icons", "water-drop.svg")
+
             # Determine temperature colour class
             temp_colour = self._get_temp_colour(temperature)
-            
+
             logger.info(f"Successfully fetched weather: {temperature}°C (current) - {description}")
             logger.info(f"Weather icon path: {icon_path}")
-            
+
             return {
                 "type": "current",
                 "temperature": temperature,
@@ -466,6 +481,7 @@ class WhatsOnToday(BasePlugin):
                 "description": description,
                 "icon": icon_path,
                 "rain_chance": rain_chance,
+                "rain_icon": rain_icon_path,
                 "humidity": humidity,
             }
             
@@ -493,7 +509,7 @@ class WhatsOnToday(BasePlugin):
             params = {
                 "latitude": latitude,
                 "longitude": longitude,
-                "current": "temperature_2m,weather_code",
+                "current": "temperature_2m,weather_code,is_day",
                 "daily": "temperature_2m_max,temperature_2m_min,precipitation_probability_max",
                 "timezone": timezone,
                 "forecast_days": 1
@@ -512,6 +528,7 @@ class WhatsOnToday(BasePlugin):
             current = data.get("current", {})
             current_temp = current.get("temperature_2m")
             weather_code = current.get("weather_code")
+            is_day = current.get("is_day", 1) == 1
 
             # Round temperatures to whole integers for display
             temp_max_int = round(temp_max) if temp_max is not None else None
@@ -519,11 +536,12 @@ class WhatsOnToday(BasePlugin):
             current_temp_int = round(current_temp) if current_temp is not None else None
 
             # Get weather description and icon from WMO code
-            description, icon_filename = self._get_weather_from_code(weather_code)
+            description, icon_filename = self._get_weather_from_code(weather_code, is_day)
 
             # Build absolute path to icon file
             plugin_dir = os.path.dirname(os.path.abspath(__file__))
             icon_path = os.path.join(plugin_dir, "render", "icons", icon_filename)
+            rain_icon_path = os.path.join(plugin_dir, "render", "icons", "water-drop.svg")
 
             # Determine temperature colour class for each value (max drives the container)
             temp_max_colour = self._get_temp_colour(temp_max)
@@ -547,6 +565,7 @@ class WhatsOnToday(BasePlugin):
                 "description": description,
                 "icon": icon_path,
                 "rain_chance": rain_chance,
+                "rain_icon": rain_icon_path,
             }
 
         except requests.exceptions.RequestException as exc:
@@ -556,12 +575,18 @@ class WhatsOnToday(BasePlugin):
             logger.error(f"Failed to parse forecast data: {exc}")
             return None
     
-    def _get_weather_from_code(self, code):
+    def _get_weather_from_code(self, code, is_day=True):
         """Map WMO weather code to description and SVG icon filename.
-        
+
         WMO Weather interpretation codes (WW):
         https://open-meteo.com/en/docs
-        
+
+        Args:
+            code: WMO weather code
+            is_day: Whether it's currently daytime (from Open-Meteo's
+                sunrise/sunset-derived is_day flag) — swaps in the night
+                artwork for conditions that have it.
+
         Returns:
             Tuple of (description, icon_filename)
         """
@@ -601,7 +626,10 @@ class WhatsOnToday(BasePlugin):
             99: ("Thunderstorm + hail", "thunderstorm.svg"),
         }
         
-        return code_map.get(code, ("Unknown", "unknown.svg"))
+        description, icon_filename = code_map.get(code, ("Unknown", "unknown.svg"))
+        if not is_day:
+            icon_filename = NIGHT_ICON_MAP.get(icon_filename, icon_filename)
+        return (description, icon_filename)
     
     def _get_temp_colour(self, temp):
         """Determine colour class based on temperature.
