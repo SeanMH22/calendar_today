@@ -1,0 +1,9 @@
+[Unit]
+Description=Periodically check the InkyPi refresh loop is alive
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=10min
+
+[Install]
+WantedBy=timers.target

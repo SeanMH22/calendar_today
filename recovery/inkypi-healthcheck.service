@@ -1,0 +1,6 @@
+[Unit]
+Description=Reboot if the InkyPi refresh loop has stopped
+
+[Service]
+Type=oneshot
+ExecStart=/opt/inkypi-recovery/inkypi-healthcheck.sh

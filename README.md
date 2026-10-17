@@ -32,6 +32,10 @@ warning tile replaces the normal content instead of the display silently going s
 — the header still shows the correct day and date, computed locally with no network
 needed.
 
+For unattended installs, [`recovery/`](recovery/) adds a hardware watchdog and a health
+check that reboots the Pi if InkyPi stops refreshing — see
+[SETUP.md](SETUP.md#7-automatic-recovery-watchdog--health-check).
+
 #### Header
 
 - **Day name** rendered as a large H1 heading (e.g. *Sunday*), coloured blue on

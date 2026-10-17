@@ -467,6 +467,68 @@ and requires no additional software beyond SSH.
 
 ---
 
+## 7. Automatic recovery (watchdog + health check)
+
+An unattended Pi will eventually freeze or have InkyPi stop refreshing, and the display
+then silently shows stale information. Two layers of recovery, both in
+[`recovery/`](recovery/), fix that without anyone needing to touch the device:
+
+1. **Hardware watchdog** — if the whole Pi locks up (kernel hang, system freeze), the
+   SoC's watchdog timer resets it. Current Raspberry Pi OS already enables this by
+   default, so you normally only need to confirm it.
+2. **Refresh-loop health check** — a systemd timer runs every 10 minutes and looks for
+   InkyPi's "Running interval refresh check" log line, which InkyPi writes every cycle
+   whether or not the display changed or the network is up. If it hasn't appeared for
+   90 minutes, the app is wedged and the Pi reboots. It does nothing until the Pi has
+   been up for 90 minutes, so a persistent fault causes at most one reboot per 90
+   minutes, never a reboot loop.
+
+> This is separate from the plugin's own **no internet** handling, which reboots once
+> after a long network outage. The health check catches the case where InkyPi
+> itself has stopped running, which the plugin can't detect.
+
+**One-time setup on the Pi** (from inside the cloned repo, as in [Section 10](#10-captive-portal-wifi-setup--manual-fallback)):
+
+```bash
+sudo mkdir -p /opt/inkypi-recovery
+sudo cp recovery/inkypi-healthcheck.sh /opt/inkypi-recovery/
+sudo chmod +x /opt/inkypi-recovery/inkypi-healthcheck.sh
+sudo cp recovery/inkypi-healthcheck.service recovery/inkypi-healthcheck.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now inkypi-healthcheck.timer
+```
+
+**Check it worked:**
+
+```bash
+systemctl show -p RuntimeWatchdogUSec   # should be non-zero (e.g. 1min)
+systemctl list-timers inkypi-healthcheck.timer
+journalctl -u inkypi-healthcheck.service   # shows "rebooting" lines if it ever fires
+```
+
+**If the watchdog check shows `0` or `infinity`** (older images), enable it with
+`recovery/watchdog.conf`:
+
+```bash
+sudo mkdir -p /etc/systemd/system.conf.d
+sudo cp recovery/watchdog.conf /etc/systemd/system.conf.d/10-watchdog.conf
+sudo systemctl daemon-reexec
+```
+
+**Tuning:** the threshold defaults to 90 minutes, which assumes InkyPi's playlist cycle
+is 15 minutes (`plugin_cycle_interval_seconds` in InkyPi's `device.json`). If you use a
+longer cycle, raise it to at least 3x your cycle by adding
+`Environment=STALE_MINUTES=<minutes>` to the `[Service]` section of
+`/etc/systemd/system/inkypi-healthcheck.service`, then `sudo systemctl daemon-reload`.
+
+**Limits:** a sudden power loss, or a hard crash that gives the Pi no chance to log
+anything, can't be diagnosed after the fact. The Pi has no real-time clock, so right
+after a boot its clock can be wrong until it reaches the network — keep that in mind
+when reading old logs (`journalctl --list-boots`). To keep logs across reboots, make
+sure `/var/log/journal` exists.
+
+---
+
 ## 8. Verifying the display
 
 - Watch the InkyPi web UI logs, or on the Pi:
@@ -489,6 +551,7 @@ and requires no additional software beyond SSH.
 | No weather shown | Latitude/longitude missing, or no internet. |
 | Events missing | Check the calendar URL is a direct `.ics` feed and is publicly reachable. |
 | Can't reach `inkypi.local` | Use the Pi's IP address instead (check your router's client list). |
+| Display stuck on old content for hours | Set up [automatic recovery](#7-automatic-recovery-watchdog--health-check); to see when it last stopped, check `journalctl --list-boots` and `journalctl -b -1`. |
 
 ## 10. Captive Portal WiFi Setup — manual fallback
 
