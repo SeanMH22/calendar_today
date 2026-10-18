@@ -527,6 +527,105 @@ after a boot its clock can be wrong until it reaches the network — keep that i
 when reading old logs (`journalctl --list-boots`). To keep logs across reboots, make
 sure `/var/log/journal` exists.
 
+### Hardware reliability and diagnosing resets
+
+The software can only recover what the hardware lets it. These were the real causes of
+an unattended Pi that stopped updating, in the order worth checking.
+
+**1. The power plug.** A Pi in a shared or public space gets unplugged — for cleaning,
+for another appliance. When power is cut the journal simply stops: no shutdown
+messages, and no reboot for the watchdog to trigger, so the display stays frozen until
+someone notices. Each sudden cut also risks corrupting the SD card.
+
+- Use a short cable with strain relief or a right-angle micro-USB plug, and secure the
+  cable (clip or tie it) so it can't be snagged by another plug.
+- Put the Pi on its own socket, ideally one that isn't switched, and label the plug
+  "Do not unplug".
+- If it keeps happening, a small UPS or battery HAT gives the Pi time to shut down
+  cleanly.
+- A micro-USB port that has been yanked can work loose. If a Pi resets when the cable
+  is touched, or three different power supplies behave the same, suspect the port and
+  replace the board.
+
+**2. The SD card.** Use a genuine, branded card (SanDisk, Samsung, Kingston). Unbranded
+or relabelled cards can report more capacity than they have, and fail unpredictably.
+Check what the Pi sees:
+
+```bash
+cat /sys/block/mmcblk0/device/{name,manfid,date}
+```
+
+A manufacturer ID of `0x000000`, or a product name that doesn't match the capacity (for
+example a "16G" name on a 32 GB card), is a warning sign. For reference, a genuine
+SanDisk card reports a manufacturer ID of `0x000003`. To test a card before use, run F3
+(`f3write` / `f3read`) on it.
+
+A card that has been through many unclean power cuts also gets suspect. The journal
+keeps a record: count the unclean-shutdown files (`.journal~`) in
+`/var/log/journal/*/`. A large number means the card has been cut off repeatedly.
+
+**3. Wi-Fi power saving.** The Pi's Wi-Fi chip can misbehave on networks with several
+access points. Turn power saving off for all connections:
+
+```bash
+printf '[connection]\nwifi.powersave = 2\n' | sudo tee /etc/NetworkManager/conf.d/wifi-powersave-off.conf
+sudo nmcli general reload conf
+```
+
+It applies the next time Wi-Fi connects (or after a reboot).
+
+**Reading why it reset.** After a reset, on a Pi Zero 2 W:
+
+```bash
+vcgencmd get_rsts        # reset reason
+vcgencmd get_throttled   # 0x0 = no power problems seen since boot
+journalctl --list-boots  # one line per boot
+journalctl -b -1 -n 40   # last 40 lines of the previous boot
+```
+
+`get_rsts` is a set of bits: `1000` is a power-on reset (power was cut or restored),
+and `20` is a reset from the watchdog block, which covers both a watchdog timeout and an
+ordinary software reboot. The bits can stay set across later resets, so you may see
+`1020` after a software reboot that followed a power-on. Treat it as a hint and read it
+alongside the journal: a previous boot that ends with no shutdown messages was cut off
+abruptly, whereas a clean reboot ends with a shutdown sequence and "Journal stopped".
+
+A quick way to separate "the OS hangs" from "something resets the Pi" is to turn the
+watchdog off for a test: put `[Manager]` and `RuntimeWatchdogSec=0` in a file in
+`/etc/systemd/system.conf.d/` that sorts after the existing one (for example
+`zz-disable-watchdog.conf`), then run `sudo systemctl daemon-reexec`. Delete the file
+afterwards. Leave the watchdog on for an unattended device.
+
+**Rebuilding or replacing the SD card.** Before wiping a card, copy off what is hard to
+recreate:
+
+- `~/InkyPi/src/config/device.json` — the playlist, calendar URL, weather location and
+  display settings.
+- `/etc/NetworkManager/system-connections/` — saved Wi-Fi networks. After a reflash,
+  check that every network you rely on is listed by `nmcli connection show`. A network
+  entered in Raspberry Pi Imager can end up missing from NetworkManager.
+- `/etc/captive-portal/config.ini` and the `captive-portal` and `recovery` units.
+- `/var/lib/tailscale/tailscaled.state` — stop `tailscaled`, restore this file, then
+  start it, and the Pi keeps its Tailscale name and address with no new login.
+
+If the old card still mounts on a computer, much of this can be copied straight off it.
+
+**Installing InkyPi on a fresh Pi — known snags.**
+
+- *"Could not get lock /var/lib/dpkg/lock-frontend"*: a first-boot package update is
+  still running. Wait until `pgrep apt-get` returns nothing and run the installer again.
+  It is safe to repeat.
+- *pip "Remote end closed connection"*: Raspberry Pi OS adds the piwheels package index,
+  which can be flaky. On a 64-bit Pi you don't need it, so install the Python packages
+  from PyPI only:
+  `sudo /usr/local/inkypi/venv_inkypi/bin/python -m pip install --isolated --index-url https://pypi.org/simple -r ~/InkyPi/install/requirements.txt`
+  (and the same with `ws-requirements.txt` for a Waveshare panel), then run the
+  installer again.
+- The installer ends by asking whether to reboot. Answer `n` and reboot yourself.
+- A Pi flashed with a password-protected user asks for a password on `sudo`, which
+  blocks unattended setup. If you are comfortable with that trade-off, add
+  `youruser ALL=(ALL) NOPASSWD:ALL` to a file in `/etc/sudoers.d/`.
+
 ---
 
 ## 8. Verifying the display
@@ -552,6 +651,10 @@ sure `/var/log/journal` exists.
 | Events missing | Check the calendar URL is a direct `.ics` feed and is publicly reachable. |
 | Can't reach `inkypi.local` | Use the Pi's IP address instead (check your router's client list). |
 | Display stuck on old content for hours | Set up [automatic recovery](#7-automatic-recovery-watchdog--health-check); to see when it last stopped, check `journalctl --list-boots` and `journalctl -b -1`. |
+| Pi resets or reboot-loops with nothing in the logs | See [hardware reliability](#hardware-reliability-and-diagnosing-resets): the plug, the SD card (genuine brand?) and Wi-Fi power saving. |
+| Pi stays off until someone power-cycles it | Power was cut (journal ends with no shutdown messages) — secure the plug; a watchdog can't help here. |
+| InkyPi installer fails on `dpkg` lock or pip "Remote end closed connection" | See [known snags](#hardware-reliability-and-diagnosing-resets) — wait for apt, and install from PyPI only. |
+| Pi joins nothing at a new location | The network isn't saved on the Pi. Check `nmcli connection show` and add it with `nmcli device wifi connect`. |
 
 ## 10. Captive Portal WiFi Setup — manual fallback
 

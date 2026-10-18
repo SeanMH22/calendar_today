@@ -4,3 +4,6 @@ captive-portal/config.ini
 .DS_Store
 __pycache__/
 *.pyc
+
+# Local Claude Code settings
+.claude/settings.local.json
